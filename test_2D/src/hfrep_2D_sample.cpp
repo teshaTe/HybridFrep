@@ -1,4 +1,3 @@
-#include "include/DDT.h"
 #include "include/FRep.h"
 
 #include "opencv2/imgproc.hpp"
@@ -97,23 +96,39 @@ int main(int argc, char** argv)
         }
     }
 
-   /* distance_transform::DistanceTransform dist(input, 0);
-    std::vector<double> dist_f = dist.get_DDT();
-    std::vector<double> dist_sf = dist.get_smooth_DDT();
-    std::vector<uchar> uchar_vec;
-    dist.draw_isolines_for_field(uchar_vec, dist_f,  input.cols, input.rows ,"unsmoothed");
-    dist.draw_isolines_for_field(uchar_vec, dist_sf, input.cols, input.rows , "smoothed");*/
-
     function_rep::geometry_params geo;
     geo.start_P.x = 216.0;
     geo.start_P.y = 216.0;
     geo.rad       = 50.0;
     geo.blob_A    = 0.5;
     geo.blob_B    = 0.3;
-    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 0, CV_8UC1);
+    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1, CV_8UC1);
+
+    std::vector<double> dist_tr    = hfrep.get_DDT();
+    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field(&dist_tr, cv::Point2i(170, 170), cv::Vec2i(128, 128),
+                                                                     cv::Vec2i(512, 512), 1);
+    std::vector<double> smoothed_ddt = hfrep.modF.get()->smooth_field(&zoomed_ddt, 513, 513);
+
+    std::vector<uchar> img_field;
+    hfrep.drawF.get()->draw_grey_isolines(&img_field, &smoothed_ddt, 512, 512, "zoomed_ddt");
+
+    std::vector<double> frep_vec = hfrep.get_frep_vec();
+    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field(&dist_tr, cv::Point2i(170, 170), cv::Vec2i(128, 128),
+                                                                      cv::Vec2i(512, 512), 1);
+    std::vector<double> fin_frep = hfrep.modF.get()->finalize_field(&zoomed_frep, 512, 512, 1);
+
+    img_field.clear();
+    hfrep.drawF.get()->draw_grey_isolines(&img_field, &fin_frep, 512, 512, "zoomed_frep");
+
+    std::vector<double> hfrep_vec;
+    hfrep.generate_hfrep(&hfrep_vec, fin_frep, &smoothed_ddt, "zoomed_hfrep");
+    hfrep.check_HFrep(hfrep_vec, "zoomed");
+
+    img_field.clear();
+    hfrep.drawF.get()->draw_grey_isolines(&img_field, &hfrep_vec, 512, 512, "zoomed_hfrep");
 
 
-    //ISDDT = zoom_in_field(&SDDT, cv::Point2i(170, 170), cv::Vec2i(128, 128), cv::Vec2i(new_src.cols, new_src.rows), res_x);
+    //TODO: zoomed_in_field check all the functions and how they work -> size of the final vector is smaller than it should be!!!!
 
     return 0;
 }
