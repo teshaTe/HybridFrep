@@ -38,13 +38,14 @@ public:
     std::shared_ptr<draw::DrawField> drawF;
 
     void generate_frep(geometry geo , std::string file_name="");
-    void generate_hfrep(std::vector<double> DistTr, std::vector<double> *hfrep , std::string file_name="");
+    void generate_hfrep(std::vector<double> *hfrep , const std::vector<double> frep,
+                        const std::vector<double> *DistTr, std::string file_name="");
     void check_HFrep(std::vector<double> hfrep );
 
     inline std::vector<double> get_hfrep_vec() { return HFRep_vec; }
     inline std::vector<double> get_frep_vec()  { return FRep_vec;  }
 
-    cv::Mat get_FRep_im(std::vector<double> input, std::string file_name = "");
+    cv::Mat get_FRep_im(const std::vector<double> *input, std::string file_name = "");
     cv::Mat get_HFRep_im(std::vector<double> input, std::string file_name = "");
 
 private:
@@ -58,6 +59,8 @@ private:
     std::vector<double> dist_tr;
     std::vector<double> HFRep_vec;
     std::vector<double> FRep_vec;
+    std::vector<double> ZoomedFRep_vec;
+    std::vector<double> sm_dist_tr;
 
     cv::Mat FRep_im, HFRep_im;
 
