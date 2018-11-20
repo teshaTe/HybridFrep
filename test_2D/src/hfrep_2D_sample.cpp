@@ -110,7 +110,10 @@ int main(int argc, char** argv)
     geo.rad       = 50.0;
     geo.blob_A    = 0.5;
     geo.blob_B    = 0.3;
-    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1, CV_8UC1);
+    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 0, CV_8UC1);
+
+
+    //ISDDT = zoom_in_field(&SDDT, cv::Point2i(170, 170), cv::Vec2i(128, 128), cv::Vec2i(new_src.cols, new_src.rows), res_x);
 
     return 0;
 }

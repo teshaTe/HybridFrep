@@ -28,9 +28,6 @@ DistanceField::DistanceField( cv::Mat img, int bo_sh ): res_x(img.cols+bo_sh),
     generate_DF(grid_1);
     generate_DF(grid_2);
     merge_grids(DDT);
-    smooth_field(DDT, res_x, res_y);
-
-    ISDDT = zoom_in_field(SDDT, cv::Point2i(170, 170), cv::Vec2i(171, 171), cv::Vec2i(new_src.cols, new_src.rows));
 }
 
 cv::Mat DistanceField::binarize_input( cv::Mat src)
@@ -177,53 +174,56 @@ void DistanceField::merge_grids(std::vector<double> &grid)
 #endif
 }
 
-std::vector<double> DistanceField::smooth_field( std::vector<double> DT, int resX, int resY)
+std::vector<double> DistanceField::smooth_field( const std::vector<double> *DT, int resX, int resY)
 {
-    for(int y = 0; y < resY; y++)
+    std::vector<double> inter_result;
+    for(int y = 0; y < resY-1; y++)
     {
-        for(int x = 0; x < resX; x++)
+        for(int x = 0; x < resX-1; x++)
         {
             double u = static_cast<float>(x)/resX;
             double v = static_cast<float>(y)/resY;
             double u_opp = 1.0 - u;
             double v_opp = 1.0 - v;
 
-            double result = ( DT[x+    y*resX] * u_opp + DT[(x+1)+    y*resX] * u ) * v_opp +
-                            ( DT[x+(y+1)*resX] * u_opp + DT[(x+1)+(y+1)*resX] * u ) * v;
+            double result = ( DT->at(x+    y*resX) * u_opp + DT->at((x+1)+    y*resX) * u ) * v_opp +
+                            ( DT->at(x+(y+1)*resX) * u_opp + DT->at((x+1)+(y+1)*resX) * u ) * v;
 
-            SDDT.push_back(result);
+            inter_result.push_back(result);
         }
     }
-
-    return SDDT;
+    return inter_result;
 }
 
-std::vector<double> DistanceField::generate_interpolated_field(const std::vector<double> DT, int resX, int resY,
+std::vector<double> DistanceField::generate_interpolated_field(const std::vector<double> *DT, int resX, int resY,
                                                                int shiftX, int shiftY, int interpolation_type)
 {
-    std::vector<double> fin_field = DT;
+    std::vector<double> fin_field = *DT;
 
-    for( int y = 0; y < resY; y+=shiftY )
+    for( int y = 0; y < resY-shiftY; y+=shiftY )
     {
-        for( int x = 0; x < resX; x+=shiftX )
+        for( int x = 0; x < resX-shiftX; x+=shiftX )
         {
-            for( int y_in = 0; y_in < shiftY; y_in++ )
+            for( int y_in = 0; y_in <= shiftY; y_in++ )
             {
-                for( int x_in = 0; x_in < shiftX; x_in++ )
+                for( int x_in = 0; x_in <= shiftX; x_in++ )
                 {
-                    if( fin_field[x+x_in+(y+y_in)*resX] == -1.0f )
+                    if( DT->at(x+x_in+(y+y_in)*resX) == -10000.0f )
                     {
                         double k_x1 = static_cast<double>( shiftX - x_in ) / ( shiftX );
                         double k_x2 = static_cast<double>( x_in ) / ( shiftX );
                         double k_y1 = static_cast<double>( shiftY - y_in ) / ( shiftY );
                         double k_y2 = static_cast<double>( y_in ) / ( shiftY );
+
                         int ind0 = x+y*resX;
                         int ind1 = x+shiftX+y*resX;
                         int ind2 = x+(y+shiftY)*resX;
                         int ind3 = x+shiftX + (y+shiftY)*resX;
-                        double fxy1 = k_x1 * DT[ind0] + k_x2 * DT[ind1];
-                        double fxy2 = k_x1 * DT[ind2] + k_x2 * DT[ind3];
+
+                        double fxy1 = k_x1 * DT->at(ind0) + k_x2 * DT->at(ind1);
+                        double fxy2 = k_x1 * DT->at(ind2) + k_x2 * DT->at(ind3);
                         double result = k_y1 * fxy1 + k_y2 * fxy2;
+
                         fin_field[x+x_in + (y+y_in)*resX] = result;
                     }
                 }
@@ -234,10 +234,11 @@ std::vector<double> DistanceField::generate_interpolated_field(const std::vector
     return fin_field;
 }
 
-std::vector<double> DistanceField::zoom_in_field(std::vector<double> field, cv::Point2i start_p, cv::Vec2i reg_s, cv::Vec2i fin_res )
+std::vector<double> DistanceField::zoom_in_field(const std::vector<double> *field, const cv::Point2i start_p, const cv::Vec2i reg_s,
+                                                 const cv::Vec2i fin_res, const int resX )
 {
     std::vector<double> thinned_zoomed_field;
-    if( fin_res[0]%reg_s[0] == 0 && fin_res[1]%reg_s[1] == 0 )
+    if( (fin_res[0]-1)%reg_s[0] == 0 && (fin_res[1]-1)%reg_s[1] == 0 )
     {
         pix_xShift = fin_res[0] / reg_s[0];
         pix_yShift = fin_res[1] / reg_s[1];
@@ -245,12 +246,11 @@ std::vector<double> DistanceField::zoom_in_field(std::vector<double> field, cv::
     else
     {
         std::cerr << "Uneven resolution attitude between zoomed res and region res is not supported yet! " << std::endl;
-        SDDT.clear();
-        return SDDT;
+        return *field;
     }
 
-    thinned_zoomed_field.resize( static_cast<size_t> ((fin_res[0]+1) * (fin_res[1]+1)) );
-    std::fill(thinned_zoomed_field.begin(), thinned_zoomed_field.end(), -1);
+    thinned_zoomed_field.resize( static_cast<size_t> (fin_res[0] * fin_res[1]) );
+    std::fill(thinned_zoomed_field.begin(), thinned_zoomed_field.end(), -10000.0);
 
     int ind_x = 0;
     int ind_y = 0;
@@ -259,15 +259,35 @@ std::vector<double> DistanceField::zoom_in_field(std::vector<double> field, cv::
     {
         for(int x = 0; x < reg_s[0]+1; x++)
         {
-            thinned_zoomed_field[ind_x+ind_y*(fin_res[0]+1)] = field[ start_p.x+x+(start_p.y+y)*res_x ];
+            thinned_zoomed_field[ind_x+ind_y*(fin_res[0])] = field->at(start_p.x+x+(start_p.y+y)*resX );
             ind_x += pix_xShift;
         }
         ind_x = 0;
         ind_y += pix_yShift;
     }
 
+    std::vector<double> filled_field, result;
+    filled_field = generate_interpolated_field( &thinned_zoomed_field, fin_res[0], fin_res[1], pix_xShift, pix_yShift);
+    result = finalize_field( &filled_field, fin_res[0], fin_res[1] );
+
+    return result;
+}
+
+std::vector<double> DistanceField::finalize_field( const std::vector<double> *field, int resX, int resY )
+{
     std::vector<double> result;
-    result = generate_interpolated_field(thinned_zoomed_field, fin_res[0]+1, fin_res[1]+1, pix_xShift, pix_yShift);
+
+    for(int y = 0; y < resY; y++)
+    {
+        for(int x = 0; x < resX; x++)
+        {
+            if( x < (resX-b_sh) )
+            {
+                if( y < (resY-b_sh))
+                    result.push_back( field->at(x+y*resX) );
+            }
+        }
+    }
 
     return result;
 }

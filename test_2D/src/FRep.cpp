@@ -20,26 +20,35 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
                                                                                                    cv_im_type   (im_type)
 {
     generate_frep( geo );
-    FRep_im = get_FRep_im( FRep_vec );
+    FRep_im = get_FRep_im( &FRep_vec );
     DT      = std::make_shared<distance_transform::DistanceField>( FRep_im, ddt_sh );
     drawF   = std::make_shared<draw::DrawField>();
-    //dist_tr = DT.get()->get_sparse_interp_SDF();
-    dist_tr = DT.get()->get_smoothed_SDF();
+    dist_tr = DT.get()->get_DDT();
 
-    //generate_hfrep( dist_tr, &HFRep_vec, "hfrep");
+    if(ddt_sh > 0)
+    {
+        std::vector<double> tmp_field = DT.get()->smooth_field(&dist_tr, res_x, res_y);
+        sm_dist_tr = DT.get()->finalize_field(&tmp_field, res_x,res_y);
+    }
+    else
+        sm_dist_tr = dist_tr;
 
-    std::vector<uchar> uchar_frep1;
-    //HFRep_im    = DT.get()->convert_field_to_image(&uchar_frep, HFRep_vec, resolution_x, resolution_y);
-    //check_HFrep( HFRep_vec );
+    generate_hfrep( &HFRep_vec, FRep_vec, &sm_dist_tr, "hfrep");
+
+    std::vector<uchar> uchar_frep1, uchar_frep;
+    HFRep_im    = drawF.get()->convert_field_to_image( &uchar_frep, &HFRep_vec, resolution_x, resolution_y);
+    check_HFrep( HFRep_vec );
 
 #ifdef USE_DEBUG_INFO_FREP
     uchar_frep1.clear();
-    drawF.get()->draw_field(uchar_frep1, dist_tr, resolution_x + ddt_sh, resolution_y + ddt_sh, "ddt1");
-    drawF.get()->draw_grey_isolines(uchar_frep1, dist_tr, resolution_x + ddt_sh, resolution_y + ddt_sh, "ddt1");
+    drawF.get()->draw_field( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
+    uchar_frep1.clear();
+    drawF.get()->draw_grey_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
 
     uchar_frep1.clear();
-    //drawF.get()->draw_field(uchar_frep1, HFRep_vec, resolution_x, resolution_y, "hfrep1");
-    //drawF.get()->draw_grey_isolines(uchar_frep1, HFRep_vec, resolution_x, resolution_y, "hfrep1");
+    drawF.get()->draw_field( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
+    uchar_frep1.clear();
+    drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
 #endif
 }
 
@@ -94,20 +103,20 @@ void function_rep::HybrydFunctionRep::generate_frep( geometry geo, std::string f
 #endif
 }
 
-cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( std::vector<double> input, std::string file_name )
+cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> *input, std::string file_name )
 {
     cv::Mat result(resolution_x, resolution_y, cv_im_type);
     std::vector<uchar> frep_im;
-    frep_im.resize(input.size());
+    frep_im.resize(input->size());
 
     for( int i = 0; i < resolution_y*resolution_x; i++ )
     {
-       if( input[i] < 0.0 )
+       if( input->at(i) < 0.0 )
            frep_im[i] = 0;
-       else if ( input[i] > 255 )
+       else if ( input->at(i) > 255 )
            frep_im[i] = 255;
        else
-           frep_im[i] = input[i]*10000;
+           frep_im[i] = input->at(i)*10000;
     }
 
     memcpy(result.data, frep_im.data(), frep_im.size()*sizeof(uchar));
@@ -128,7 +137,7 @@ double function_rep::HybrydFunctionRep::get_step_function_val(double frep_val, i
     }
     else if ( function == 2 )
     {
-        double result = 2.0/(1+std::exp(-2.0*frep_val/0.001))-1.0;
+        double result = 2.0/(1+std::exp(-2.0*frep_val/0.0001))-1.0;
         return result;
     }
     else if ( function == 3 )
@@ -149,12 +158,13 @@ double function_rep::HybrydFunctionRep::get_step_function_val(double frep_val, i
 
 }
 
-void function_rep::HybrydFunctionRep::generate_hfrep( std::vector<double> DistTr, std::vector<double> *hfrep, std::string file_name )
+void function_rep::HybrydFunctionRep::generate_hfrep(std::vector<double> *hfrep, const std::vector<double> frep,
+                                                     const std::vector<double> *DistTr, std::string file_name )
 {
     for(int i = 0; i < resolution_y*resolution_x; i++)
     {
-       double hfrep_val = get_step_function_val( FRep_vec[i], 2 ) * DistTr[i];
-       hfrep->push_back(hfrep_val);
+        double hfrep_val = get_step_function_val( frep[i], 2 ) * DistTr->at(i);
+        hfrep->push_back(hfrep_val);
     }
 
 #ifdef USE_DEBUG_INFO_FREP
