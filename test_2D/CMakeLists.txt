@@ -5,11 +5,13 @@ project(HFRep_2D)
 set (SRC_HEADERS  include/DDT.h
                   include/FRep.h
                   include/DrawField.h
+                  include/ModifyField.h
     )
 
 set (SRC_SOURCE   src/DDT.cpp
                   src/FRep.cpp
                   src/DrawField.cpp
+                  src/ModifyField.cpp
                   src/hfrep_2D_sample.cpp
     )
 
