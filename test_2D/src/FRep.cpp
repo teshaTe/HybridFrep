@@ -23,13 +23,11 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
     FRep_im = get_FRep_im( &FRep_vec );
     DT      = std::make_shared<distance_transform::DistanceField>( FRep_im, ddt_sh );
     drawF   = std::make_shared<draw::DrawField>();
+    modF    = std::make_shared<modified_field::ModifyField>();
     dist_tr = DT.get()->get_DDT();
 
     if(ddt_sh > 0)
-    {
-        std::vector<double> tmp_field = DT.get()->smooth_field(&dist_tr, res_x, res_y);
-        sm_dist_tr = DT.get()->finalize_field(&tmp_field, res_x,res_y);
-    }
+        sm_dist_tr = modF.get()->smooth_field( &dist_tr, res_x+ddt_sh, res_y+ddt_sh );
     else
         sm_dist_tr = dist_tr;
 
@@ -37,7 +35,7 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
 
     std::vector<uchar> uchar_frep1, uchar_frep;
     HFRep_im    = drawF.get()->convert_field_to_image( &uchar_frep, &HFRep_vec, resolution_x, resolution_y);
-    check_HFrep( HFRep_vec );
+    check_HFrep( HFRep_vec, "default");
 
 #ifdef USE_DEBUG_INFO_FREP
     uchar_frep1.clear();
@@ -178,7 +176,7 @@ void function_rep::HybrydFunctionRep::generate_hfrep(std::vector<double> *hfrep,
 #endif
 }
 
-void function_rep::HybrydFunctionRep::check_HFrep( std::vector<double> hfrep )
+void function_rep::HybrydFunctionRep::check_HFrep( std::vector<double> hfrep, std::string hfrep_check_name )
 {
     int frep_zeros  = 0;
     int hfrep_zeros = 0;
@@ -193,6 +191,7 @@ void function_rep::HybrydFunctionRep::check_HFrep( std::vector<double> hfrep )
             dist_tr_zeros++;
     }
 
+    std::cout << "This is < " << hfrep_check_name << "> cheching." << std::endl;
     if(frep_zeros == hfrep_zeros)
     {
         std::cout << "HFrep does not have additional zeros!" << std::endl;
