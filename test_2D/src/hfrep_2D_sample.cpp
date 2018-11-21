@@ -20,6 +20,12 @@ function_rep::geometry set_geometry(std::string input)
         return function_rep::geometry::BLOBBY;
     else if( input == "butterfly" )
         return function_rep::geometry::BUTTERFLY;
+    else if( input == "heart" )
+        return  function_rep::geometry::HEART;
+    else if( input == "chair")
+        return function_rep::geometry::CHAIR;
+    else if (input == "borg")
+        return function_rep::geometry::BORG;
     else
     {
         std::cerr << "ERROR: unknown option! please specify with '-geo' [circle, quad, rectangle, triangle] \n " << std::endl;
@@ -99,13 +105,18 @@ int main(int argc, char** argv)
     function_rep::geometry_params geo;
     geo.start_P.x = 216.0;
     geo.start_P.y = 216.0;
-    geo.rad       = 50.0;
-    geo.blob_A    = 0.5;
-    geo.blob_B    = 0.3;
+    geo.rad       = 60.0;
     function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1, CV_8UC1);
 
+    // cv::Point2i(170, 170) is good for all shapes except heart; heart is cv::Point2i(150, 350)
+    cv::Point2i start_regP;
+    if(args::geometry == "heart" && !args::geometry.empty())
+        start_regP = cv::Point2i(150, 350);
+    else
+        start_regP = cv::Point2i(170, 170);
+
     std::vector<double> dist_tr    = hfrep.get_DDT();
-    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field(&dist_tr, cv::Point2i(170, 170), cv::Vec2i(128, 128),
+    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field(&dist_tr, start_regP, cv::Vec2i(128, 128),
                                                                      cv::Vec2i(512, 512), 1);
     std::vector<double> smoothed_ddt = hfrep.modF.get()->smooth_field(&zoomed_ddt, 513, 513);
 
@@ -113,7 +124,7 @@ int main(int argc, char** argv)
     hfrep.drawF.get()->draw_grey_isolines(&img_field, &smoothed_ddt, 512, 512, "zoomed_ddt");
 
     std::vector<double> frep_vec = hfrep.get_frep_vec();
-    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field(&dist_tr, cv::Point2i(170, 170), cv::Vec2i(128, 128),
+    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field(&dist_tr, start_regP, cv::Vec2i(128, 128),
                                                                       cv::Vec2i(512, 512), 1);
     std::vector<double> fin_frep = hfrep.modF.get()->finalize_field(&zoomed_frep, 512, 512, 1);
 
