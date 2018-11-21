@@ -10,17 +10,12 @@
 function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params params,
                                                    int res_x, int res_y, int ddt_sh, int im_type): start_p (params.start_P.x/res_x, params.start_P.y/res_y),
                                                                                                    R       (params.rad/res_x),
-                                                                                                   but_u   (params.but_U),
-                                                                                                   bl_phi1 (params.blob_phi1),
-                                                                                                   bl_phi2 (params.blob_phi2),
-                                                                                                   bl_a(params.blob_A),
-                                                                                                   bl_b(params.blob_B),
                                                                                                    resolution_x (res_x),
                                                                                                    resolution_y (res_y),
                                                                                                    cv_im_type   (im_type)
 {
     generate_frep( geo );
-    FRep_im = get_FRep_im( &FRep_vec );
+    FRep_im = get_FRep_im( &FRep_vec, geo );
     DT      = std::make_shared<distance_transform::DistanceField>( FRep_im, ddt_sh );
     drawF   = std::make_shared<draw::DrawField>();
     modF    = std::make_shared<modified_field::ModifyField>();
@@ -73,8 +68,8 @@ void function_rep::HybrydFunctionRep::generate_frep( geometry geo, std::string f
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-                double blob1 = R*R/( (u - bl_a)*(u - bl_a) + (v - bl_b)*(v - bl_b));
-                double blob2 = R*R*0.25/((u - bl_a-0.3)*(u - bl_a-0.3) + (v - bl_b-0.2)*(v - bl_b-0.2));
+                double blob1 = R*R/( (u - start_p.x)*(u - start_p.x) + (v - start_p.y)*(v - start_p.y));
+                double blob2 = R*R*0.25/((u - start_p.x-0.3)*(u - start_p.x-0.3) + (v - start_p.y-0.2)*(v - start_p.y-0.2));
                 double result = union_function(blob1, blob2);
                 FRep_vec.push_back(result);
             }
@@ -82,7 +77,74 @@ void function_rep::HybrydFunctionRep::generate_frep( geometry geo, std::string f
     }
     else if ( geo == geometry::BUTTERFLY )
     {
+        for (int y = 0; y < resolution_y; y++)
+        {
+            for(int x = 0; x < resolution_x; x++)
+            {
+                double u   = static_cast<double>(x)/resolution_x;
+                double v   = static_cast<double>(y)/resolution_y;
 
+                double result = std::pow((u-start_p.x)*4.0, 6.0) + std::pow((v-start_p.y)*4.0, 6.0) - (u - start_p.x)*(u - start_p.x)*16.0;
+                FRep_vec.push_back(result);
+            }
+        }
+    }
+    else if ( geo == geometry::HEART )
+    {
+        for (int y = 0; y < resolution_y; y++)
+        {
+            for(int x = 0; x < resolution_x; x++)
+            {
+                double u   = static_cast<double>(x)/resolution_x;
+                double v   = static_cast<double>(y)/resolution_y;
+
+                double shX = u - start_p.x;
+                double shY = v - start_p.y;
+
+                double result = std::pow(9.0*shX*shX + 9.0*shY*shY - 1.0, 3.0) - 9.0*shX*shX*std::pow(3.0*shY, 3.0);
+                FRep_vec.push_back(result);
+            }
+        }
+    }
+    else if( geo == geometry::CHAIR)
+    {
+        for (int y = 0; y < resolution_y; y++)
+        {
+            for(int x = 0; x < resolution_x; x++)
+            {
+                double u   = static_cast<double>(x)/resolution_x;
+                double v   = static_cast<double>(y)/resolution_y;
+
+                double shX = u - start_p.x;
+                double shY = v - start_p.y;
+                double a = 0.8;
+                double b = 0.6;
+                double k = 2.0;
+                double zoom = 36.0;
+
+                double result = std::pow(zoom*shX*shX + zoom*shY*shY - a*k*k, 2.0) - b*(k*k - zoom*2.0*shX*shX)*(k*k - zoom*2.0*shY*shY);
+                FRep_vec.push_back(result);
+            }
+        }
+    }
+    else if( geo == geometry::BORG)
+    {
+        for (int y = 0; y < resolution_y; y++)
+        {
+            for(int x = 0; x < resolution_x; x++)
+            {
+                double u   = static_cast<double>(x)/resolution_x;
+                double v   = static_cast<double>(y)/resolution_y;
+
+                double shX = u - start_p.x;
+                double shY = v - start_p.y;
+
+                double zoom = 81.0;
+
+                double result = std::sin(zoom*shX*shY);
+                FRep_vec.push_back(result);
+            }
+        }
     }
     else
     {
@@ -101,20 +163,34 @@ void function_rep::HybrydFunctionRep::generate_frep( geometry geo, std::string f
 #endif
 }
 
-cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> *input, std::string file_name )
+cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> *input, geometry geo, std::string file_name )
 {
     cv::Mat result(resolution_x, resolution_y, cv_im_type);
     std::vector<uchar> frep_im;
     frep_im.resize(input->size());
 
+    double val = 0;
     for( int i = 0; i < resolution_y*resolution_x; i++ )
     {
-       if( input->at(i) < 0.0 )
+       if(geo == geometry::CIRCLE)
+           val = input->at(i)*10000.0;
+       else if(geo == geometry::BLOBBY)
+           val = input->at(i)*100.0;
+       else if(geo == geometry::BUTTERFLY)
+           val = input->at(i)*100000.0;
+       else if (geo == geometry::HEART)
+           val = input->at(i)*10000000.0;
+       else if (geo == geometry::CHAIR)
+           val = input->at(i)*1000000.0;
+       else if ( geo == geometry::BORG)
+           val = input->at(i)*10000.0;
+
+       if( val < 0.0 )
            frep_im[i] = 0;
-       else if ( input->at(i) > 255 )
+       else if ( val > 255 )
            frep_im[i] = 255;
        else
-           frep_im[i] = input->at(i)*10000;
+           frep_im[i] = val;
     }
 
     memcpy(result.data, frep_im.data(), frep_im.size()*sizeof(uchar));

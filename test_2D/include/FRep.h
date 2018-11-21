@@ -13,21 +13,18 @@ namespace function_rep {
 
 enum class geometry
 {
-    CIRCLE,
     BLOBBY,
-    HEART,
+    BORG,
     BUTTERFLY,
+    CHAIR,
+    CIRCLE,
+    HEART,
     NONE
 };
 
 struct geometry_params
 {
     double rad;
-    double blob_phi1;
-    double blob_phi2;
-    double blob_A;
-    double blob_B;
-    double but_U;
     cv::Point2d start_P ;
 };
 
@@ -43,8 +40,7 @@ public:
                         const std::vector<double> *DistTr, std::string file_name="");
     void check_HFrep(std::vector<double> hfrep , std::string hfrep_check_name);
 
-    cv::Mat get_FRep_im(const std::vector<double> *input, std::string file_name = "");
-    cv::Mat get_HFRep_im(std::vector<double> input, std::string file_name = "");
+    cv::Mat get_FRep_im(const std::vector<double> *input, geometry geo, std::string file_name = "");
 
 // functions for getting calculated vectors
 public:
