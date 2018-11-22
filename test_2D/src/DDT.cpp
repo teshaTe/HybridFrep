@@ -30,6 +30,21 @@ DistanceField::DistanceField( cv::Mat img, int bo_sh ): res_x(img.cols+bo_sh),
     merge_grids(DDT);
 }
 
+DistanceField::DistanceField(std::vector<double> field, int f_width, int f_height ): res_x(f_width),
+                                                                                     res_y(f_height),
+                                                                                     INF(calculate_inf()),
+                                                                                     INSIDE(INF, INF),
+                                                                                     EMPTY(0.0, 0.0),
+                                                                                     grid_1(res_x * res_y, INSIDE),
+                                                                                     grid_2(res_x * res_y, INSIDE),
+                                                                                     DDT(res_x*res_y, 0.0)
+{
+    create_grid(nullptr, &field);
+    generate_DF(grid_1);
+    generate_DF(grid_2);
+    merge_grids(DDT);
+}
+
 cv::Mat DistanceField::binarize_input( cv::Mat src)
 {
     cv::Mat dst_gray, dst_bw;
@@ -55,27 +70,51 @@ cv::Mat DistanceField::binarize_input( cv::Mat src)
 /*
  * create_grid() - function which preinitialize DDT grid for further calculations
  */
-void DistanceField::create_grid( cv::Mat *img )
+void DistanceField::create_grid( cv::Mat *img, std::vector<double> *field )
 {
-    cv::Mat bin_dst = binarize_input(*img);
-    unsigned char *img_buff = static_cast<unsigned char*>(bin_dst.data);
-
-    for (int y = 0; y < res_y; y++)
+    if(img != nullptr)
     {
-       for (int x = 0; x < res_x; x++)
-       {
+        cv::Mat bin_dst = binarize_input(*img);
+        unsigned char *img_buff = static_cast<unsigned char*>(bin_dst.data);
 
-           if(img_buff[x+y*res_x] > 0)
-          {
-             fill_grid_element(grid_1, INSIDE, x, y);
-             fill_grid_element(grid_2, EMPTY,  x, y);
-          }
-          else
-          {
-             fill_grid_element(grid_1, EMPTY,  x, y);
-             fill_grid_element(grid_2, INSIDE, x, y);
-          }
-       }
+        for (int y = 0; y < res_y; y++)
+        {
+           for (int x = 0; x < res_x; x++)
+           {
+
+               if(img_buff[x+y*res_x] > 0)
+              {
+                 fill_grid_element(grid_1, INSIDE, x, y);
+                 fill_grid_element(grid_2, EMPTY,  x, y);
+              }
+              else
+              {
+                 fill_grid_element(grid_1, EMPTY,  x, y);
+                 fill_grid_element(grid_2, INSIDE, x, y);
+              }
+           }
+        }
+    }
+    else
+    {
+        for (int y = 0; y < res_y; y++)
+        {
+           for (int x = 0; x < res_x; x++)
+           {
+
+               if(field->at(x+y*res_x) >= 0)
+              {
+                 fill_grid_element(grid_1, INSIDE, x, y);
+                 fill_grid_element(grid_2, EMPTY,  x, y);
+              }
+              else
+              {
+                 fill_grid_element(grid_1, EMPTY,  x, y);
+                 fill_grid_element(grid_2, INSIDE, x, y);
+              }
+           }
+        }
+
     }
 }
 

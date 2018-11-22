@@ -21,9 +21,10 @@ class DistanceField
 
 public:
     DistanceField( cv::Mat img, int b_sh );
+    DistanceField(std::vector<double> field, int f_width, int f_height );
     ~DistanceField(){ }
 
-    inline std::vector<double> get_DDT()               { return DDT; }
+    inline std::vector<double> get_DDT() { return DDT; }
 
     //functions for generating distance transform using binarized input image
 private:
@@ -33,7 +34,7 @@ private:
 
     cv::Mat binarize_input(cv::Mat src);
     void generate_DF(std::vector<Point> &grid);
-    void create_grid(cv::Mat *img);
+    void create_grid(cv::Mat *img, std::vector<double> *field=nullptr);
     void compare_grid_points(std::vector<Point> &grid, Point &point, int offsetx, int offsety, int x, int y);
     void merge_grids(std::vector<double> &grid);
 

@@ -14,7 +14,7 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
                                                                                                    resolution_y (res_y),
                                                                                                    cv_im_type   (im_type)
 {
-    generate_frep( geo );
+    generate_frep( geo, res_x, res_y, nullptr );
     FRep_im = get_FRep_im( &FRep_vec, geo );
     DT      = std::make_shared<distance_transform::DistanceField>( FRep_im, ddt_sh );
     drawF   = std::make_shared<draw::DrawField>();
@@ -34,116 +34,168 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
 
 #ifdef USE_DEBUG_INFO_FREP
     uchar_frep1.clear();
-    drawF.get()->draw_field( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
-    uchar_frep1.clear();
     drawF.get()->draw_grey_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
 
-    uchar_frep1.clear();
-    drawF.get()->draw_field( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
     uchar_frep1.clear();
     drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
 #endif
 }
 
-void function_rep::HybrydFunctionRep::generate_frep( geometry geo, std::string file_name )
+function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, function_rep::geometry_params params,
+                                                   int res_x, int res_y, int ddt_sh): start_p (params.start_P.x/res_x, params.start_P.y/res_y),
+                                                                                      R       (params.rad/res_x),
+                                                                                      resolution_x (res_x),
+                                                                                      resolution_y (res_y)
 {
+    generate_frep( geo, res_x, res_y, nullptr );
+
+    std::vector<double> inc_frep;
+    if(ddt_sh > 0)
+    {
+        generate_frep( geo, res_x+ddt_sh, res_y+ddt_sh, &inc_frep);
+        DT = std::make_shared<distance_transform::DistanceField>( inc_frep, res_x+ddt_sh, res_y+ddt_sh );
+    }
+    else
+    {
+        DT = std::make_shared<distance_transform::DistanceField>( FRep_vec, res_x, res_y );
+    }
+
+
+    drawF   = std::make_shared<draw::DrawField>();
+    modF    = std::make_shared<modified_field::ModifyField>();
+    dist_tr = DT.get()->get_DDT();
+
+    if(ddt_sh > 0)
+        sm_dist_tr = modF.get()->smooth_field( &dist_tr, res_x+ddt_sh, res_y+ddt_sh );
+    else
+        sm_dist_tr = dist_tr;
+
+    generate_hfrep( &HFRep_vec, FRep_vec, &sm_dist_tr, "hfrep");
+
+    std::vector<uchar> uchar_frep1, uchar_frep;
+    HFRep_im    = drawF.get()->convert_field_to_image( &uchar_frep, &HFRep_vec, resolution_x, resolution_y);
+    check_HFrep( HFRep_vec, "default");
+
+#ifdef USE_DEBUG_INFO_FREP
+    uchar_frep1.clear();
+    drawF.get()->draw_grey_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
+
+    uchar_frep1.clear();
+    drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
+#endif
+}
+
+void function_rep::HybrydFunctionRep::generate_frep( geometry geo, int res_x, int res_y, std::vector<double> *out, std::string file_name )
+{
+
     if( geo == geometry::CIRCLE )
     {
-        for (int y = 0; y < resolution_y; y++)
+        for (int y = 0; y < res_y; y++)
         {
-            for(int x = 0; x < resolution_x; x++)
+            for(int x = 0; x < res_x; x++)
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-                double result = R*R - ( u - start_p.x )*( u - start_p.x ) - ( v - start_p.y )*( v - start_p.y );
-                FRep_vec.push_back(result);
+                double shX = u - start_p.x;
+                double shY = v - start_p.y;
+                double result = R*R - shX*shX - shY*shY;
+                if(out != nullptr)
+                    out->push_back(result);
+                else
+                    FRep_vec.push_back(result);
             }
         }
     }
     else if ( geo == geometry::BLOBBY )
     {
-        for (int y = 0; y < resolution_y; y++)
+        for (int y = 0; y < res_y; y++)
         {
-            for(int x = 0; x < resolution_x; x++)
+            for(int x = 0; x < res_x; x++)
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-                double blob1 = R*R/( (u - start_p.x)*(u - start_p.x) + (v - start_p.y)*(v - start_p.y));
-                double blob2 = R*R*0.25/((u - start_p.x-0.3)*(u - start_p.x-0.3) + (v - start_p.y-0.2)*(v - start_p.y-0.2));
+                double shX = u - start_p.x;
+                double shY = v - start_p.y;
+                double blob1 = R*R/( shX*shX + shY*shY);
+                double blob2 = R*R*0.25/((shX - 0.3)*(shX - 0.3) + (shY - 0.2)*(shY - 0.2));
                 double result = union_function(blob1, blob2);
-                FRep_vec.push_back(result);
-            }
+                if(out != nullptr)
+                    out->push_back(result);
+                else
+                    FRep_vec.push_back(result);            }
         }
     }
     else if ( geo == geometry::BUTTERFLY )
     {
-        for (int y = 0; y < resolution_y; y++)
+        for (int y = 0; y < res_y; y++)
         {
-            for(int x = 0; x < resolution_x; x++)
+            for(int x = 0; x < res_x; x++)
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-
-                double result = std::pow((u-start_p.x)*4.0, 6.0) + std::pow((v-start_p.y)*4.0, 6.0) - (u - start_p.x)*(u - start_p.x)*16.0;
-                FRep_vec.push_back(result);
-            }
+                double shX = u - start_p.x;
+                double shY = v - start_p.y;
+                double result = std::pow(shX*4.0, 6.0) + std::pow(shY*4.0, 6.0) - shX*shX*16.0;
+                if(out != nullptr)
+                    out->push_back(result);
+                else
+                    FRep_vec.push_back(result);            }
         }
     }
     else if ( geo == geometry::HEART )
     {
-        for (int y = 0; y < resolution_y; y++)
+        for (int y = 0; y < res_y; y++)
         {
-            for(int x = 0; x < resolution_x; x++)
+            for(int x = 0; x < res_x; x++)
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-
                 double shX = u - start_p.x;
                 double shY = v - start_p.y;
-
                 double result = std::pow(9.0*shX*shX + 9.0*shY*shY - 1.0, 3.0) - 9.0*shX*shX*std::pow(3.0*shY, 3.0);
-                FRep_vec.push_back(result);
-            }
+                if(out != nullptr)
+                    out->push_back(result);
+                else
+                    FRep_vec.push_back(result);            }
         }
     }
     else if( geo == geometry::CHAIR)
     {
-        for (int y = 0; y < resolution_y; y++)
+        for (int y = 0; y < res_y; y++)
         {
-            for(int x = 0; x < resolution_x; x++)
+            for(int x = 0; x < res_x; x++)
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-
                 double shX = u - start_p.x;
                 double shY = v - start_p.y;
                 double a = 0.8;
                 double b = 0.6;
                 double k = 2.0;
                 double zoom = 36.0;
-
                 double result = std::pow(zoom*shX*shX + zoom*shY*shY - a*k*k, 2.0) - b*(k*k - zoom*2.0*shX*shX)*(k*k - zoom*2.0*shY*shY);
-                FRep_vec.push_back(result);
-            }
+                if(out != nullptr)
+                    out->push_back(result);
+                else
+                    FRep_vec.push_back(result);            }
         }
     }
     else if( geo == geometry::BORG)
     {
-        for (int y = 0; y < resolution_y; y++)
+        for (int y = 0; y < res_y; y++)
         {
-            for(int x = 0; x < resolution_x; x++)
+            for(int x = 0; x < res_x; x++)
             {
                 double u   = static_cast<double>(x)/resolution_x;
                 double v   = static_cast<double>(y)/resolution_y;
-
                 double shX = u - start_p.x;
                 double shY = v - start_p.y;
-
                 double zoom = 81.0;
-
                 double result = std::sin(zoom*shX*shY);
-                FRep_vec.push_back(result);
-            }
+                if(out != nullptr)
+                    out->push_back(result);
+                else
+                    FRep_vec.push_back(result);            }
         }
     }
     else
@@ -159,7 +211,12 @@ void function_rep::HybrydFunctionRep::generate_frep( geometry geo, std::string f
     file.precision(7);
 
     for (int i = 0; i < resolution_y*resolution_x; i++)
-        file << FRep_vec[i] << std::endl;
+    {
+        if(out != nullptr)
+            file << out->at(i)  << std::endl;
+        else
+            file << FRep_vec[i] << std::endl;
+    }
 #endif
 }
 

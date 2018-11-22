@@ -32,15 +32,18 @@ class HybrydFunctionRep {
 
 public:
     HybrydFunctionRep(geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh, int im_type);
+    HybrydFunctionRep(geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh);
     std::shared_ptr<draw::DrawField> drawF;
     std::shared_ptr<modified_field::ModifyField> modF;
 
-    void generate_frep(geometry geo , std::string file_name="");
+    void generate_frep(geometry geo, int res_x, int res_y, std::vector<double> *out, std::string file_name="");
     void generate_hfrep(std::vector<double> *hfrep , const std::vector<double> frep,
                         const std::vector<double> *DistTr, std::string file_name="");
     void check_HFrep(std::vector<double> hfrep , std::string hfrep_check_name);
 
     cv::Mat get_FRep_im(const std::vector<double> *input, geometry geo, std::string file_name = "");
+
+    std::vector<double> add_valuesTo_FRep( std::vector<double> *field, geometry geo, int res_x, int res_y );
 
 // functions for getting calculated vectors
 public:

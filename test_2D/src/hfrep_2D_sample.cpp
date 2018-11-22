@@ -106,7 +106,8 @@ int main(int argc, char** argv)
     geo.start_P.x = 216.0;
     geo.start_P.y = 216.0;
     geo.rad       = 60.0;
-    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1, CV_8UC1);
+    //function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1, CV_8UC1);
+    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1);
 
     // cv::Point2i(170, 170) is good for all shapes except heart; heart is cv::Point2i(150, 350)
     cv::Point2i start_regP;
@@ -116,27 +117,27 @@ int main(int argc, char** argv)
         start_regP = cv::Point2i(170, 170);
 
     std::vector<double> dist_tr    = hfrep.get_DDT();
-    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field(&dist_tr, start_regP, cv::Vec2i(128, 128),
-                                                                     cv::Vec2i(512, 512), 1);
-    std::vector<double> smoothed_ddt = hfrep.modF.get()->smooth_field(&zoomed_ddt, 513, 513);
+    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field( &dist_tr, start_regP, cv::Vec2i(128, 128),
+                                                                      cv::Vec2i(512, 512), 1 );
+    std::vector<double> smoothed_ddt = hfrep.modF.get()->smooth_field( &zoomed_ddt, 513, 513 );
 
     std::vector<uchar> img_field;
-    hfrep.drawF.get()->draw_grey_isolines(&img_field, &smoothed_ddt, 512, 512, "zoomed_ddt");
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &smoothed_ddt, 512, 512, "zoomed_ddt" );
 
     std::vector<double> frep_vec = hfrep.get_frep_vec();
-    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field(&dist_tr, start_regP, cv::Vec2i(128, 128),
-                                                                      cv::Vec2i(512, 512), 1);
-    std::vector<double> fin_frep = hfrep.modF.get()->finalize_field(&zoomed_frep, 512, 512, 1);
+    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
+                                                                      cv::Vec2i(512, 512), 1 );
+    std::vector<double> fin_frep = hfrep.modF.get()->finalize_field( &zoomed_frep, 512, 512, 1 );
 
     img_field.clear();
-    hfrep.drawF.get()->draw_grey_isolines(&img_field, &fin_frep, 512, 512, "zoomed_frep");
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &fin_frep, 512, 512, "zoomed_frep" );
 
     std::vector<double> hfrep_vec;
-    hfrep.generate_hfrep(&hfrep_vec, fin_frep, &smoothed_ddt, "zoomed_hfrep");
-    hfrep.check_HFrep(hfrep_vec, "zoomed");
+    hfrep.generate_hfrep( &hfrep_vec, fin_frep, &smoothed_ddt, "zoomed_hfrep" );
+    hfrep.check_HFrep( hfrep_vec, "zoomed" );
 
     img_field.clear();
-    hfrep.drawF.get()->draw_grey_isolines(&img_field, &hfrep_vec, 512, 512, "zoomed_hfrep");
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &hfrep_vec, 512, 512, "zoomed_hfrep" );
 
 
     //TODO: zoomed_in_field check all the functions and how they work -> size of the final vector is smaller than it should be!!!!
