@@ -36,9 +36,9 @@ public:
     std::shared_ptr<draw::DrawField> drawF;
     std::shared_ptr<modified_field::ModifyField> modF;
 
-    void generate_frep(geometry geo, int res_x, int res_y, std::vector<double> *out, std::string file_name="");
+    std::vector<double> generate_frep(geometry geo, int res_x, int res_y, double z, cv::Point2d init_pos, std::string file_name="");
     void generate_hfrep(std::vector<double> *hfrep , const std::vector<double> frep,
-                        const std::vector<double> *DistTr, std::string file_name="");
+                        const std::vector<double> *DistTr, cv::Vec2i res, std::string file_name="");
     void check_HFrep(std::vector<double> hfrep , std::string hfrep_check_name);
 
     cv::Mat get_FRep_im(const std::vector<double> *input, geometry geo, std::string file_name = "");
