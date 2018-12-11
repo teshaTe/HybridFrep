@@ -110,8 +110,7 @@ int main(int argc, char** argv)
     geo.start_P.x = 216.0;
     geo.start_P.y = 216.0;
     geo.rad       = 60.0;
-    //function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1, CV_8UC1);
-    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 1);
+    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 0);
 
     // cv::Point2i(170, 170) is good for all shapes except heart; heart is cv::Point2i(150, 350)
     cv::Point2i start_regP;
@@ -122,9 +121,9 @@ int main(int argc, char** argv)
 
     //getting distance transform, zoom in, smooth, draw it
     std::vector<double> dist_tr    = hfrep.get_DDT();
-    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field( &dist_tr, start_regP, cv::Vec2i(128, 128),
-                                                                      cv::Vec2i(512, 512), 1, modified_field::BILINEAR);
-    std::vector<double> smZoom_ddt = hfrep.modF.get()->smooth_field( &zoomed_ddt, 513, 513 );
+    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_field( &dist_tr, start_regP, cv::Vec2i(128, 128),
+                                                                    cv::Vec2i(512, 512));
+    std::vector<double> smZoom_ddt = hfrep.modF.get()->smooth_field( &zoomed_ddt, 512, 512 );
 
     std::vector<uchar> img_field;
     hfrep.drawF.get()->draw_grey_isolines( &img_field, &smZoom_ddt, 512, 512, "zoomed_ddt" );
@@ -135,16 +134,17 @@ int main(int argc, char** argv)
     hfrep.drawF.get()->draw_grey_isolines( &img_field, &frep_vec, 512, 512, "frep_field" );
 
     // zoom in frep field and draw it
-    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
-                                                                      cv::Vec2i(512, 512), 1, modified_field::BILINEAR );
-    std::vector<double> fin_frep = hfrep.modF.get()->finalize_field( &zoomed_frep, 512, 512, 1 );
+    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
+                                                                    cv::Vec2i(512, 512));
+
+    //std::vector<double> fin_frep = hfrep.modF.get()->finalize_field( &zoomed_frep, 512, 512, 1 );
 
     img_field.clear();
-    hfrep.drawF.get()->draw_grey_isolines( &img_field, &fin_frep, 512, 512, "zoomed_frep" );
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &zoomed_frep, 512, 512, "zoomed_frep" );
 
     // generate zoomed in HFrep and draw it
     std::vector<double> ZM_hfrep_vec;
-    hfrep.generate_hfrep( &ZM_hfrep_vec, fin_frep, &smZoom_ddt, "zoomed_hfrep" );
+    hfrep.generate_hfrep( &ZM_hfrep_vec, zoomed_frep, &smZoom_ddt, cv::Vec2i(512, 512), "zoomed_hfrep" );
     hfrep.check_HFrep( ZM_hfrep_vec, "zoomed" );
 
     img_field.clear();
@@ -152,15 +152,42 @@ int main(int argc, char** argv)
 
     //draw the difference between hfrep and ddt
     img_field.clear();
-    std::vector<double> diff_field; diff_field.resize( ZM_hfrep_vec.size() );
-
-    for(int i = 0; i < diff_field.size(); i++)
-        diff_field[i] = std::abs( std::abs(ZM_hfrep_vec[i]) - smZoom_ddt[i] ) * 10000.0;
-
-
+    std::vector<double> diff_field = hfrep.modF.get()->diff_fields( &ZM_hfrep_vec, &smZoom_ddt, 10000.0 );
     hfrep.drawF.get()->draw_grey_isolines( &img_field, &diff_field, 512, 512, "zoomed_diff_field" );
 
-    //TODO: zoomed_in_field check all the functions and how they work -> size of the final vector is smaller than it should be!!!!
+    //interpolation if the field is sparse
+    std::vector<double> inter_frep, frep0;
+    std::vector<uchar> img_field0;
+    cv::Point2d sh_center = {15.0/128.0, 15.0/128.0};
+    frep0 = hfrep.generate_frep( function_rep::geometry::HEART, 128, 128, 15.0, sh_center);
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &frep0, 128, 128, "frep_128x128" );
+
+    img_field0.clear();
+    inter_frep = hfrep.modF.get()->interpolate_field( &frep0, cv::Vec2i(128, 128), cv::Vec2i(512, 512) );
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &inter_frep, 512, 512, "inter_frep_512x512" );
+
+    distance_transform::DistanceField dt( frep0, 128, 128 );
+    std::vector<double> ddt0 = dt.get_DDT();
+    hfrep.modF->smooth_field(&ddt0, 128, 128);
+    img_field0.clear();
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &ddt0, 128, 128, "ddt_128x128" );
+
+    std::vector<double> inter_ddt = hfrep.modF.get()->interpolate_field( &ddt0, cv::Vec2i(128,128), cv::Vec2i(512,512) );
+    img_field0.clear();
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &inter_ddt, 512, 512, "ddt_512x512" );
+
+    std::vector<double> hfrep0;
+    hfrep.generate_hfrep(&hfrep0, frep0, &ddt0, cv::Vec2i(128, 128) );
+    img_field0.clear();
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &hfrep0, 128, 128, "hfrep_128x128" );
+
+    std::vector<double> inter_hfrep = hfrep.modF.get()->interpolate_field( &hfrep0, cv::Vec2i(128,128), cv::Vec2i(512,512) );
+    img_field0.clear();
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &inter_hfrep, 512, 512, "hfrep_512x512" );
+
+    std::vector<double> diff_field_inter = hfrep.modF.get()->diff_fields( &inter_hfrep, &inter_ddt, 1000.0 );
+    img_field0.clear();
+    hfrep.drawF.get()->draw_grey_isolines( &img_field0, &diff_field_inter, 512, 512, "diff_hfrep_512x512" );
 
     return 0;
 }
