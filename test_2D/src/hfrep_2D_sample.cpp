@@ -4,6 +4,10 @@
 #include "opencv2/highgui.hpp"
 
 #include <iostream>
+#include <iterator>
+#include <algorithm>
+
+#include<fstream>
 
 namespace  args
 {
@@ -36,7 +40,7 @@ function_rep::geometry set_geometry(std::string input)
 void print_help()
 {
   std::cout << "\nPossible customly specified options: \n";
-  std::cout << "-geo   - specify simple geometry [circle, quad, rectangle, triangle] \n";
+  std::cout << "-geo   - specify simple geometry [blobby, butterfly, chair, heart, borg] \n";
   std::cout << "-im    - specify first image [optional] \n";
   std::cout << "--save - save the output     [optional] \n";
   std::cout << "--help - output help\n" << std::endl;
@@ -116,29 +120,45 @@ int main(int argc, char** argv)
     else
         start_regP = cv::Point2i(170, 170);
 
+    //getting distance transform, zoom in, smooth, draw it
     std::vector<double> dist_tr    = hfrep.get_DDT();
     std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_in_field( &dist_tr, start_regP, cv::Vec2i(128, 128),
-                                                                      cv::Vec2i(512, 512), 1 );
-    std::vector<double> smoothed_ddt = hfrep.modF.get()->smooth_field( &zoomed_ddt, 513, 513 );
+                                                                      cv::Vec2i(512, 512), 1, modified_field::BILINEAR);
+    std::vector<double> smZoom_ddt = hfrep.modF.get()->smooth_field( &zoomed_ddt, 513, 513 );
 
     std::vector<uchar> img_field;
-    hfrep.drawF.get()->draw_grey_isolines( &img_field, &smoothed_ddt, 512, 512, "zoomed_ddt" );
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &smZoom_ddt, 512, 512, "zoomed_ddt" );
 
+    // get frep field and draw it
+    img_field.clear();
     std::vector<double> frep_vec = hfrep.get_frep_vec();
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &frep_vec, 512, 512, "frep_field" );
+
+    // zoom in frep field and draw it
     std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_in_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
-                                                                      cv::Vec2i(512, 512), 1 );
+                                                                      cv::Vec2i(512, 512), 1, modified_field::BILINEAR );
     std::vector<double> fin_frep = hfrep.modF.get()->finalize_field( &zoomed_frep, 512, 512, 1 );
 
     img_field.clear();
     hfrep.drawF.get()->draw_grey_isolines( &img_field, &fin_frep, 512, 512, "zoomed_frep" );
 
-    std::vector<double> hfrep_vec;
-    hfrep.generate_hfrep( &hfrep_vec, fin_frep, &smoothed_ddt, "zoomed_hfrep" );
-    hfrep.check_HFrep( hfrep_vec, "zoomed" );
+    // generate zoomed in HFrep and draw it
+    std::vector<double> ZM_hfrep_vec;
+    hfrep.generate_hfrep( &ZM_hfrep_vec, fin_frep, &smZoom_ddt, "zoomed_hfrep" );
+    hfrep.check_HFrep( ZM_hfrep_vec, "zoomed" );
 
     img_field.clear();
-    hfrep.drawF.get()->draw_grey_isolines( &img_field, &hfrep_vec, 512, 512, "zoomed_hfrep" );
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &ZM_hfrep_vec, 512, 512, "zoomed_hfrep" );
 
+    //draw the difference between hfrep and ddt
+    img_field.clear();
+    std::vector<double> diff_field; diff_field.resize( ZM_hfrep_vec.size() );
+
+    for(int i = 0; i < diff_field.size(); i++)
+        diff_field[i] = std::abs( std::abs(ZM_hfrep_vec[i]) - smZoom_ddt[i] ) * 10000.0;
+
+
+    hfrep.drawF.get()->draw_grey_isolines( &img_field, &diff_field, 512, 512, "zoomed_diff_field" );
 
     //TODO: zoomed_in_field check all the functions and how they work -> size of the final vector is smaller than it should be!!!!
 
