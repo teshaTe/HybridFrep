@@ -1,47 +1,32 @@
 #include "include/ModifyField.h"
 
 #include <iostream>
+#include <stdexcept>
 
 namespace modified_field {
 
 std::vector<double> ModifyField::smooth_field( const std::vector<double> *DT, int resX, int resY)
 {
-    std::vector<double> inter_result;
-    for(int y = 0; y < resY-1; y++)
+    std::vector<double> inter_result; inter_result.reserve( DT->size());
+    for(int y = 0; y < resY; y++)
     {
-        for(int x = 0; x < resX-1; x++)
+        for(int x = 0; x < resX; x++)
         {
             double u = static_cast<double>(x)/resX;
             double v = static_cast<double>(y)/resY;
             double u_opp = 1.0 - u;
             double v_opp = 1.0 - v;
 
-            double result = ( DT->at(x+    y*resX) * u_opp + DT->at((x+1)+    y*resX) * u ) * v_opp +
-                            ( DT->at(x+(y+1)*resX) * u_opp + DT->at((x+1)+(y+1)*resX) * u ) * v;
+            int x1 = clipWithBounds(x, 0, resX -2 );
+            int y1 = clipWithBounds(y, 0, resX -2 );
+
+            double result = ( DT->at(x1+    y1*resX) * u_opp + DT->at((x1+1)+    y1*resX) * u ) * v_opp +
+                            ( DT->at(x1+(y1+1)*resX) * u_opp + DT->at((x1+1)+(y1+1)*resX) * u ) * v;
 
             inter_result.push_back(result);
         }
     }
     return inter_result;
-}
-
-// Value of k-th B-Spline basic function at t.
-double ModifyField::Bspline(size_t k, double t) {
-    assert(0 <= t && t < 1);
-    assert(k < 4);
-
-    switch (k) {
-        case 0:
-            return (t * (t * (-t + 3) - 3) + 1) / 6;
-        case 1:
-            return (t * t * (3 * t - 6) + 4) / 6;
-        case 2:
-            return (t * (t * (-3 * t + 3) + 3) + 1) / 6;
-        case 3:
-            return t * t * t / 6;
-        default:
-            return 0;
-    }
 }
 
 /*std::vector<double> ModifyField::generate_b_spline_interpolated_field(const std::vector<double> *DT, int resX, int resY, int shiftX, int shiftY)
@@ -140,41 +125,28 @@ std::vector<double> ModifyField::generate_bicubic_interpolated_field(const std::
     return fin_field;
 }
 
-std::vector<double> ModifyField::generate_bilinearly_interpolated_field(const std::vector<double> *DT, int resX, int resY, int shiftX, int shiftY)
+
+double ModifyField::get_bilinear_interpolated_val(const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY)
 {
-    std::vector<double> fin_field = *DT;
+    double result;
 
-    for( int y = 0; y < resY-shiftY; y+=shiftY )
-    {
-        for( int x = 0; x < resX-shiftX; x+=shiftX )
-        {
-            for( int y_in = 0; y_in <= shiftY; y_in++ )
-            {
-                for( int x_in = 0; x_in <= shiftX; x_in++ )
-                {
-                    if( DT->at(x+x_in+(y+y_in)*resX) == -10000.0f )
-                    {
-                        double k_x1 = static_cast<double>( shiftX - x_in ) / ( shiftX );
-                        double k_x2 = static_cast<double>( x_in ) / ( shiftX );
-                        double k_y1 = static_cast<double>( shiftY - y_in ) / ( shiftY );
-                        double k_y2 = static_cast<double>( y_in ) / ( shiftY );
+    double k_x1 = static_cast<double>( std::floor(indXY[0] + 1.0f) - indXY[0] );
+    double k_x2 = static_cast<double>( indXY[0] - std::floor(indXY[0]) );
+    double k_y1 = static_cast<double>( std::floor(indXY[1] + 1.0f) - indXY[1] );
+    double k_y2 = static_cast<double>( indXY[1] - std::floor(indXY[1]) );
 
-                        double fxy1 = k_x1 * DT->at(x+y*resX) + k_x2 * DT->at(x+shiftX+y*resX);
-                        double fxy2 = k_x1 * DT->at(x+(y+shiftY)*resX) + k_x2 * DT->at(x+shiftX + (y+shiftY)*resX);
-                        double result = k_y1 * fxy1 + k_y2 * fxy2;
+    int x = clipWithBounds( int( indXY[0] ), 0, res[0] - 2);
+    int y = clipWithBounds( int( indXY[1] ), 0, res[1] - 2);
 
-                        fin_field[x+x_in + (y+y_in)*resX] = result;
-                    }
-                }
-            }
-        }
-    }
+    double fxy1 = k_x1 * DT->at(x+y*res[0])     + k_x2 * DT->at(x+1+y*res[0]);
+    double fxy2 = k_x1 * DT->at(x+(y+1)*res[0]) + k_x2 * DT->at(x+1 + (y+1)*res[0]);
+    result = k_y1 * fxy1 + k_y2 * fxy2;
 
-    return fin_field;
+    return result;
 }
 
-std::vector<double> ModifyField::zoom_in_field(const std::vector<double> *field, const cv::Point2i start_p,
-                                               const cv::Vec2i reg_s, const cv::Vec2i fin_res, int b_sh, interpolation inter)
+std::vector<double> ModifyField::zoom_field( const std::vector<double> *field, const cv::Point2i start_p,
+                                             const cv::Vec2i reg_s, const cv::Vec2i fin_res)
 {
     std::vector<double> thinned_zoomed_field;
     if( (fin_res[0])%reg_s[0] == 0 && (fin_res[1])%reg_s[1] == 0 )
@@ -188,72 +160,69 @@ std::vector<double> ModifyField::zoom_in_field(const std::vector<double> *field,
         return *field;
     }
 
-    int new_width, new_height, new_reg_w, new_reg_h;
-
-    if( inter == interpolation::BILINEAR )
-    {
-        new_width  = fin_res[0]+b_sh;
-        new_height = fin_res[1]+b_sh;
-        new_reg_w  = reg_s[0]+b_sh;
-        new_reg_h  = reg_s[1]+b_sh;
-        thinned_zoomed_field.resize( static_cast<size_t> ( new_width * new_height ) );
-    }
-    else if ( inter == interpolation::BICUBIC )
-    {
-        new_width  = fin_res[0]+pix_xShift+b_sh;
-        new_height = fin_res[1]+pix_yShift+b_sh;
-        new_reg_w  = reg_s[0]+2*b_sh;
-        new_reg_h  = reg_s[1]+2*b_sh;
-        thinned_zoomed_field.resize( static_cast<size_t> ( new_width * new_height ) );
-    }
-    else
-    {
-        std::cerr << "ERROR: Unknown interpolation type! <interpolation inter> option. input field will be returned." << std::endl;
-        return *field;
-    }
-
+    thinned_zoomed_field.resize(reg_s[0]*reg_s[1]);
     std::fill(thinned_zoomed_field.begin(), thinned_zoomed_field.end(), -10000.0);
 
-    int ind_x = 0;
-    int ind_y = 0;
-
-    for(int y = 0; y < new_reg_h; y++)
+    for(int y = 0; y < reg_s[1]; y++)
     {
-        for(int x = 0; x < new_reg_w; x++)
+        for(int x = 0; x < reg_s[0]; x++)
         {
-            thinned_zoomed_field[ind_x+ind_y*new_width] = field->at(start_p.x+x+(start_p.y+y)*(fin_res[0]+b_sh) );
-            ind_x += pix_xShift;
+            thinned_zoomed_field[x+y*reg_s[0]] = field->at(start_p.x+x+(start_p.y+y)*fin_res[0] );
         }
-        ind_x = 0;
-        ind_y += pix_yShift;
     }
 
     std::vector<double> result;
-    if( inter == interpolation::BILINEAR )
-        result = generate_bilinearly_interpolated_field( &thinned_zoomed_field, new_width, new_height, pix_xShift, pix_yShift );
-    //else if(inter == interpolation::BSPLINE )
-        //result = generate_b_spline_interpolated_field( &thinned_zoomed_field, new_width, new_height, pix_xShift, pix_yShift );
-    else
-        result = generate_bicubic_interpolated_field( &thinned_zoomed_field, new_width, new_height, pix_xShift, pix_yShift );
-
-    return result;
-}
-
-std::vector<double> ModifyField::finalize_field( const std::vector<double> *field, int resX, int resY, int b_sh )
-{
-    std::vector<double> result;
-
-    for(int y = 0; y < resY+b_sh; y++)
+    for( int y = 0; y < fin_res[1]; ++y )
     {
-        for(int x = 0; x < resX+b_sh; x++)
+        for( int x = 0; x < fin_res[0]; ++x )
         {
-            if( x < resX )
-            {
-                if( y < resY)
-                    result.push_back( field->at(x+y*(resX+b_sh) ));
+            cv::Vec2f indXY = { float(x)/pix_xShift, float(y)/pix_yShift };
+            try {
+                result.push_back( get_bilinear_interpolated_val( &thinned_zoomed_field, reg_s, indXY ) );
+            } catch (const std::out_of_range& e) {
+                std::cerr << "error: " << e.what() << ",   index: " << x << ", " << y << "   " <<
+                             " indXY: " << indXY[0] << ", " << indXY[1] << std::endl;
             }
         }
     }
+    return  result;
+}
+
+std::vector<double> ModifyField::interpolate_field(const std::vector<double> *field, const cv::Vec2i cur_res, const cv::Vec2i fin_res)
+{
+    std::vector<double> result;
+    if( (fin_res[0])%cur_res[0] == 0 && (fin_res[1])%cur_res[1] == 0 )
+    {
+        pix_xShift = fin_res[0] / cur_res[0];
+        pix_yShift = fin_res[1] / cur_res[1];
+    }
+    else
+    {
+        std::cerr << "Uneven resolution attitude between zoomed res and region res is not supported yet! " << std::endl;
+        return *field;
+    }
+
+    for( int y = 0; y < fin_res[1]; ++y )
+    {
+        for( int x = 0; x < fin_res[0]; ++x )
+        {
+            cv::Vec2f indXY = { float(x)/pix_xShift, float(y)/pix_yShift };
+            try {
+                result.push_back( get_bilinear_interpolated_val( field, cur_res, indXY ) );
+            } catch (const std::out_of_range& e) {
+                std::cerr << "error: " << e.what() << ",   index: " << x << ", " << y << "   " <<
+                             " indXY: " << indXY[0] << ", " << indXY[1] << std::endl;
+            }
+        }
+    }
+    return  result;
+}
+
+std::vector<double> ModifyField::diff_fields(const std::vector<double> *field1, const std::vector<double> *field2, double multi )
+{
+    std::vector<double> result;
+    for(int i = 0; i < field1->size(); i++)
+        result.push_back( std::abs( std::abs(field1->at(i)) - field2->at(i) ) * multi); // multi = 10000.0
 
     return result;
 }
