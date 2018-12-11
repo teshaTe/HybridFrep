@@ -60,7 +60,6 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
         DT = std::make_shared<distance_transform::DistanceField>( FRep_vec, res_x, res_y );
     }
 
-
     drawF   = std::make_shared<draw::DrawField>();
     modF    = std::make_shared<modified_field::ModifyField>();
     dist_tr = DT.get()->get_DDT();
@@ -82,6 +81,13 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
 
     uchar_frep1.clear();
     drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
+
+    std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
+    for(int i = 0; i < HFRep_vec.size(); i++)
+        diff_field[i] = ( std::abs(std::abs(HFRep_vec[i]) - sm_dist_tr[i] ))*10000.0;
+
+    uchar_frep1.clear();
+    drawF.get()->draw_grey_isolines( &uchar_frep1, &diff_field, 512, 512, "diff_field" );
 #endif
 }
 
