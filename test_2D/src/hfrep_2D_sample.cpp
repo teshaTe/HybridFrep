@@ -28,8 +28,10 @@ function_rep::geometry set_geometry(std::string input)
         return  function_rep::geometry::HEART;
     else if( input == "chair")
         return function_rep::geometry::CHAIR;
-    else if (input == "borg")
+    else if( input == "borg")
         return function_rep::geometry::BORG;
+    else if( input == "cat" )
+        return function_rep::geometry::CAT;
     else
     {
         std::cerr << "ERROR: unknown option! please specify with '-geo' [circle, quad, rectangle, triangle] \n " << std::endl;
@@ -107,15 +109,15 @@ int main(int argc, char** argv)
     }
 
     function_rep::geometry_params geo;
-    geo.start_P.x = 216.0;
-    geo.start_P.y = 216.0;
+    geo.start_P.x = 250.0;
+    geo.start_P.y = 250.0;
     geo.rad       = 60.0;
     function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 0);
 
     // cv::Point2i(170, 170) is good for all shapes except heart; heart is cv::Point2i(150, 350)
     cv::Point2i start_regP;
     if(args::geometry == "heart" && !args::geometry.empty())
-        start_regP = cv::Point2i(150, 350);
+        start_regP = cv::Point2i(185, 350);
     else
         start_regP = cv::Point2i(170, 170);
 
@@ -136,9 +138,6 @@ int main(int argc, char** argv)
     // zoom in frep field and draw it
     std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
                                                                     cv::Vec2i(512, 512));
-
-    //std::vector<double> fin_frep = hfrep.modF.get()->finalize_field( &zoomed_frep, 512, 512, 1 );
-
     img_field.clear();
     hfrep.drawF.get()->draw_grey_isolines( &img_field, &zoomed_frep, 512, 512, "zoomed_frep" );
 
@@ -152,18 +151,18 @@ int main(int argc, char** argv)
 
     //draw the difference between hfrep and ddt
     img_field.clear();
-    std::vector<double> diff_field = hfrep.modF.get()->diff_fields( &ZM_hfrep_vec, &smZoom_ddt, 10000.0 );
+    std::vector<double> diff_field = hfrep.modF.get()->diff_fields( &ZM_hfrep_vec, &smZoom_ddt, 100000.0 );
     hfrep.drawF.get()->draw_grey_isolines( &img_field, &diff_field, 512, 512, "zoomed_diff_field" );
 
     //interpolation if the field is sparse
     std::vector<double> inter_frep, frep0;
     std::vector<uchar> img_field0;
     cv::Point2d sh_center = {15.0/128.0, 15.0/128.0};
-    frep0 = hfrep.generate_frep( function_rep::geometry::HEART, 128, 128, 15.0, sh_center);
+    frep0 = hfrep.generate_frep( function_rep::geometry::CAT, 128, 128, 15.0, sh_center);
     hfrep.drawF.get()->draw_grey_isolines( &img_field0, &frep0, 128, 128, "frep_128x128" );
 
     img_field0.clear();
-    inter_frep = hfrep.modF.get()->interpolate_field( &frep0, cv::Vec2i(128, 128), cv::Vec2i(512, 512) );
+    inter_frep = hfrep.modF.get()->interpolate_field( &frep0, cv::Vec2i(128, 128), cv::Vec2i(512, 512), modified_field::BICUBIC );
     hfrep.drawF.get()->draw_grey_isolines( &img_field0, &inter_frep, 512, 512, "inter_frep_512x512" );
 
     distance_transform::DistanceField dt( frep0, 128, 128 );
@@ -172,7 +171,7 @@ int main(int argc, char** argv)
     img_field0.clear();
     hfrep.drawF.get()->draw_grey_isolines( &img_field0, &ddt0, 128, 128, "ddt_128x128" );
 
-    std::vector<double> inter_ddt = hfrep.modF.get()->interpolate_field( &ddt0, cv::Vec2i(128,128), cv::Vec2i(512,512) );
+    std::vector<double> inter_ddt = hfrep.modF.get()->interpolate_field( &ddt0, cv::Vec2i(128,128), cv::Vec2i(512,512), modified_field::BICUBIC );
     img_field0.clear();
     hfrep.drawF.get()->draw_grey_isolines( &img_field0, &inter_ddt, 512, 512, "ddt_512x512" );
 
@@ -181,7 +180,7 @@ int main(int argc, char** argv)
     img_field0.clear();
     hfrep.drawF.get()->draw_grey_isolines( &img_field0, &hfrep0, 128, 128, "hfrep_128x128" );
 
-    std::vector<double> inter_hfrep = hfrep.modF.get()->interpolate_field( &hfrep0, cv::Vec2i(128,128), cv::Vec2i(512,512) );
+    std::vector<double> inter_hfrep = hfrep.modF.get()->interpolate_field( &hfrep0, cv::Vec2i(128,128), cv::Vec2i(512,512), modified_field::BICUBIC );
     img_field0.clear();
     hfrep.drawF.get()->draw_grey_isolines( &img_field0, &inter_hfrep, 512, 512, "hfrep_512x512" );
 
