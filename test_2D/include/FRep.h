@@ -19,6 +19,7 @@ enum class geometry
     CHAIR,
     CIRCLE,
     HEART,
+    CAT,
     NONE
 };
 
@@ -31,19 +32,18 @@ struct geometry_params
 class HybrydFunctionRep {
 
 public:
-    HybrydFunctionRep(geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh, int im_type);
-    HybrydFunctionRep(geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh);
+    HybrydFunctionRep( geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh, int im_type );
+    HybrydFunctionRep( geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh );
     std::shared_ptr<draw::DrawField> drawF;
     std::shared_ptr<modified_field::ModifyField> modF;
 
-    std::vector<double> generate_frep(geometry geo, int res_x, int res_y, double z, cv::Point2d init_pos, std::string file_name="");
-    void generate_hfrep(std::vector<double> *hfrep , const std::vector<double> frep,
-                        const std::vector<double> *DistTr, cv::Vec2i res, std::string file_name="");
-    void check_HFrep(std::vector<double> hfrep , std::string hfrep_check_name);
+    std::vector<double> generate_frep( geometry geo, int res_x, int res_y, double z,
+                                       cv::Point2d init_pos, std::string file_name = "" );
+    void generate_hfrep( std::vector<double> *hfrep , const std::vector<double> frep,
+                         const std::vector<double> *DistTr, cv::Vec2i res, std::string file_name = "" );
+    void check_HFrep( std::vector<double> hfrep , std::string hfrep_check_name );
 
-    cv::Mat get_FRep_im(const std::vector<double> *input, geometry geo, std::string file_name = "");
-
-    std::vector<double> add_valuesTo_FRep( std::vector<double> *field, geometry geo, int res_x, int res_y );
+    cv::Mat get_FRep_im( const std::vector<double> *input, geometry geo, std::string file_name = "" );
 
 // functions for getting calculated vectors
 public:
@@ -59,6 +59,14 @@ private:
     inline double intersect_function(double a, double b) { return a + b - std::sqrt(a * a + b * b); }
     inline double union_function(double a, double b)     { return a + b + std::sqrt(a * a + b * b); }
     inline double subtract_function(double a, double b)  { return intersect_function(a, -b); }
+
+    double generate_cat_model(cv::Point2d pos, cv::Vec2i res);
+    double ellipsoid_2d (cv::Point2d pos, cv::Point2d cent, double a, double b , int resx);
+    double ellipticCylZ (cv::Point2d pos, cv::Point2d cent, double a, double b , int resx);
+    double torusY_2d( cv::Point2d pos, cv::Point2d cent, double r, double R );
+    double torusZ_2d( cv::Point2d pos, cv::Point2d cent, double r, double R );
+    double sphere_2d( cv::Point2d pos, cv::Point2d cent, double r );
+
 
 private:
     std::vector<double> dist_tr;

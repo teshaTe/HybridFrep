@@ -83,8 +83,7 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
     drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
 
     std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
-    for(int i = 0; i < HFRep_vec.size(); i++)
-        diff_field[i] = ( std::abs(std::abs(HFRep_vec[i]) - sm_dist_tr[i] ))*10000.0;
+    diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 1000.0 );
 
     uchar_frep1.clear();
     drawF.get()->draw_grey_isolines( &uchar_frep1, &diff_field, 512, 512, "diff_field" );
@@ -103,8 +102,8 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         {
             for(int x = 0; x < res_x; x++)
             {
-                double u   = static_cast<double>(x)/resolution_x;
-                double v   = static_cast<double>(y)/resolution_y;
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
                 double shX = u - init_pos.x;
                 double shY = v - init_pos.y;
                 double result = R*R - shX*shX - shY*shY;
@@ -118,8 +117,8 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         {
             for(int x = 0; x < res_x; x++)
             {
-                double u   = static_cast<double>(x)/resolution_x;
-                double v   = static_cast<double>(y)/resolution_y;
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
                 double shX = u - init_pos.x;
                 double shY = v - init_pos.y;
                 double blob1 = R*R/( shX*shX + shY*shY);
@@ -134,8 +133,8 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         {
             for(int x = 0; x < res_x; x++)
             {
-                double u   = static_cast<double>(x)/resolution_x;
-                double v   = static_cast<double>(y)/resolution_y;
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
                 double shX = u - init_pos.x;
                 double shY = v - init_pos.y;
 
@@ -175,8 +174,8 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         {
             for(int x = 0; x < res_x; x++)
             {
-                double u   = static_cast<double>(x)/resolution_x;
-                double v   = static_cast<double>(y)/resolution_y;
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
                 double shX = u - init_pos.x;
                 double shY = v - init_pos.y;
                 double a = 0.8;
@@ -199,17 +198,31 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         {
             for(int x = 0; x < res_x; x++)
             {
-                double u   = static_cast<double>(x)/resolution_x;
-                double v   = static_cast<double>(y)/resolution_y;
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
                 double shX = u - init_pos.x;
                 double shY = v - init_pos.y;
 
                 if( z == 0.0 )
                     zoom = 9.0;
                 else
-                    zoom = z;                double result = std::sin(zoom*zoom*shX*shY);
-
-                FRep_vec.push_back(result);            }
+                    zoom = z;
+                double result = std::sin(zoom*zoom*shX*shY);
+                FRep_vec.push_back(result);
+            }
+        }
+    }
+    else if( geo == geometry::CAT )
+    {
+        for (int y = 0; y < res_y; y++)
+        {
+            for(int x = 0; x < res_x; x++)
+            {
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
+                double result = generate_cat_model( cv::Point2d(u, v), cv::Vec2i(res_x, res_y) );
+                FRep_vec.push_back(result);
+            }
         }
     }
     else
@@ -240,18 +253,20 @@ cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> 
     double val = 0;
     for( int i = 0; i < resolution_y*resolution_x; i++ )
     {
-       if(geo == geometry::CIRCLE)
+       if(geo == geometry::CIRCLE )
            val = input->at(i)*10000.0;
-       else if(geo == geometry::BLOBBY)
+       else if(geo == geometry::BLOBBY )
            val = input->at(i)*100.0;
-       else if(geo == geometry::BUTTERFLY)
+       else if(geo == geometry::BUTTERFLY )
            val = input->at(i)*100000.0;
-       else if (geo == geometry::HEART)
+       else if (geo == geometry::HEART )
            val = input->at(i)*10000000.0;
-       else if (geo == geometry::CHAIR)
+       else if (geo == geometry::CHAIR )
            val = input->at(i)*1000000.0;
-       else if ( geo == geometry::BORG)
+       else if ( geo == geometry::BORG )
            val = input->at(i)*10000.0;
+       else if ( geo == geometry::CAT )
+           val = input->at(i)*10.0;
 
        if( val < 0.0 )
            frep_im[i] = 0;
@@ -268,6 +283,183 @@ cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> 
     cv::imwrite(fin_file_name, result);
 #endif
     return result;
+}
+
+double function_rep::HybrydFunctionRep::ellipsoid_2d( cv::Point2d pos, cv::Point2d cent, double a, double b, int resx )
+{
+    return 1.0/resx - std::pow( ( pos.x - cent.x )/a, 2.0 ) - std::pow( ( pos.y - cent.y )/b, 2.0 );
+}
+
+double function_rep::HybrydFunctionRep::ellipticCylZ( cv::Point2d pos, cv::Point2d cent, double a, double b, int resx )
+{
+    return 1.0/resx - std::pow( pos.x - cent.x, 2.0 )/( a*a ) - std::pow( pos.y - cent.y, 2.0 )/( b*b );
+}
+
+double function_rep::HybrydFunctionRep::torusY_2d(cv::Point2d pos, cv::Point2d cent, double r, double R)
+{
+    return r*r - std::pow( pos.y - cent.y, 2.0 ) - std::pow( pos.y - cent.y, 2.0 )- R*R +
+           2.0*R*std::sqrt( std::pow( pos.x - cent.x, 2.0 ) + std::pow( pos.y - cent.y, 2.0 ));
+}
+
+double function_rep::HybrydFunctionRep::torusZ_2d(cv::Point2d pos, cv::Point2d cent, double r, double R)
+{
+    return r*r - std::pow( pos.x - cent.x, 2.0 ) - std::pow( pos.y - cent.y, 2.0 ) -
+           R*R + 2.0*R*std::sqrt( std::pow( pos.x - cent.x, 2.0 ) + std::pow( pos.y - cent.y, 2.0 ) );
+}
+
+double function_rep::HybrydFunctionRep::sphere_2d(cv::Point2d pos, cv::Point2d cent, double r)
+{
+    return r*r - std::pow( pos.x - cent.x, 2.0 ) - std::pow( pos.y - cent.y, 2.0 );
+}
+
+double function_rep::HybrydFunctionRep::generate_cat_model( cv::Point2d pos, cv::Vec2i res )
+{
+    double shX = res[0]/2.0, shY = res[1]/3.0;
+    //head
+    cv::Point2d headC = { (0.0+shX)/res[0], (4.5+shY)/res[1] };
+    double head = ellipsoid_2d( pos, headC, 6.0, 5.5, res[0] );
+
+    //nose
+    cv::Point2d noseC = { (0.0+shX)/res[0], (25.5+shY)/res[1] };
+    double nose = ellipsoid_2d( pos, noseC, 0.5, 0.5, res[0] );
+
+    //face
+    cv::Point2d faceC1 = { (0.0+shX)/res[0], (4.5+shY)/res[1] };
+    double xFace1 = ellipsoid_2d( pos, faceC1, 6.0, 5.5, res[0] );
+    cv::Point2d faceC2 = { (0.0+shX)/res[0], (3.7+shY)/res[1] };
+    double xFace2 = ellipticCylZ( pos, faceC2, 4.7, 4.5, res[0] );
+    double face   = intersect_function( xFace1, xFace2 );
+
+    //mouth
+    cv::Point2d mouthC = { (0.0+shX)/res[0], (10.5+shY)/res[1] };
+    double mouth1 = ellipsoid_2d( pos, mouthC, 3.0, 2.3, res[0] );
+    double mouth2 = -(60.5+shY)/res[1] + pos.y;
+    double mouth  = intersect_function( mouth1, mouth2 );
+
+    //eyes
+    cv::Point2d eye1C = { (0.0+shX)/res[0], (2.5+shY)/res[1] };
+    double eye1 = ellipsoid_2d( pos, eye1C, 6.0, 5.5, res[0] );
+
+    cv::Point2d eye2C = { (36.5+shX)/res[0], (-10.5+shY)/res[1] };
+    double eye2 = ellipticCylZ( pos, eye2C, 1.5, 1.4, res[0] );
+    double eye3 = intersect_function( eye1, eye2 );
+
+    cv::Point2d eye4C = { (-36.5+shX)/res[0], (-10.5+shY)/res[1] };
+    double eye4 = ellipticCylZ( pos, eye4C, 1.5, 1.4, res[0] );
+    double eye5 = intersect_function( eye1, eye4 );
+
+    cv::Point2d eye6C = { (20.3+shX)/res[0], (-10.5+shY)/res[1]};
+    double eye6 = ellipsoid_2d( pos, eye6C, 0.3, 0.3, res[0] );
+    double eye7 = subtract_function( eye3, eye6 );
+
+    cv::Point2d eye8C = { (-20.3+shX)/res[0], (-10.5+shY)/res[1] };
+    double eye8 = ellipsoid_2d( pos, eye8C, 0.3, 0.3, res[0] );
+    double eye9 = subtract_function( eye5, eye8 );
+
+    //head final
+    double fin_head0 = union_function( eye9, eye7 );
+    double fin_head1 = union_function( face, head );
+    double fin_head2 = subtract_function( fin_head1, mouth );
+    double fin_head3 = subtract_function( fin_head2, nose );
+    double fin_head  = subtract_function( fin_head3, fin_head0);
+
+    //body
+    cv::Point2d bodyC = { (0.0+shX)/res[0], (122.0+shY)/res[1] };
+    double body1 = ellipsoid_2d( pos, bodyC, 4.5, 6.0, res[0] );
+    double body2 = intersect_function( intersect_function( body1, (126.0+shY)/res[1]+pos.y ), -(121.0+shY)/res[1]+pos.y );
+
+    //neck
+    cv::Point2d neckC = { (0.0+shX)/res[0], (120.0+shY)/res[1] };
+    double neck = ellipsoid_2d( pos, neckC, 1.8, 0.8, res[0] );
+
+    //bell
+    cv::Point2d bellC = { (0.0+shX)/res[0], (180.0+shY)/res[1] };
+    double bell  = sphere_2d( pos, bellC, 10.8/res[0] );
+
+    double body3 = union_function( body2, neck );
+
+    //belly
+    cv::Point2d bellyC1 = { (0.0+shX)/res[0], ( 32.0+shY)/res[1] };
+    double belly1 = ellipsoid_2d( pos, bellyC1, 4.5, 6.0, res[0] );
+
+    cv::Point2d bellyC2 = { (0.0+shX)/res[0], ( 200.0+shY)/res[1] };
+    double belly2 = ellipticCylZ( pos, bellyC2, 0.5, 0.5, res[0] );
+    double belly3 = intersect_function( belly1, belly2 );
+
+    cv::Point2d bellyC4 = { (0.0+shX)/res[0], ( 138.0+shY)/res[1] };
+    double belly4 = ellipticCylZ( pos, bellyC4, 2.0, 1.6, res[0] );
+
+    cv::Point2d bellyC5 = { (0.0+shX)/res[0], ( 200.0+shY)/res[1] };
+    double belly5 = ellipsoid_2d( pos, bellyC5, 1.1, 1.1, res[0] );
+    double belly6 = -(103.0+shY)/res[1] + pos.y;
+
+    double fin_body0 = intersect_function( belly4, belly6 );
+    double fin_body1 = union_function( fin_body0, belly5 );
+    double fin_body2 = subtract_function( body3, fin_body1 );
+    double fin_body3 = union_function( fin_body2, belly3 );
+    double fin_body  = union_function( fin_body3, bell );
+
+    //legs and feet
+    cv::Point2d l_legC = { (93.0+shX)/res[0], (247.5+shY)/res[1] };
+    double l_leg = ellipsoid_2d( pos, l_legC, 3.0, 1.5, res[0] );
+    cv::Point2d r_legC = { (-93.0+shX)/res[0], (247.5+shY)/res[1] };
+    double r_leg = ellipsoid_2d( pos, r_legC, 3.0, 1.5, res[0] );
+
+    cv::Point2d l_footC = { (92.0+shX)/res[0], (246.0+shY)/res[1] };
+    double l_foot = ellipsoid_2d( pos, l_footC, 1.0, 1.0, res[0] );
+    cv::Point2d r_footC = { (-92.0+shX)/res[0], (246.0+shY)/res[1] };
+    double r_foot = ellipsoid_2d( pos, r_footC, 1.0, 1.0, res[0] );
+
+    double legs0 = union_function( l_leg, l_foot );
+    double legs1 = union_function( r_leg, r_foot );
+    double legs  = union_function( legs0, legs1 );
+
+    //right mustache
+    double rh = 0.15;
+    cv::Point2d r_mustC1 = { (112.0+shX)/res[0], ( 100.0+shY)/res[1] };
+    double r_must1 = torusZ_2d( pos, r_mustC1, 7.0/res[0], rh );
+    cv::Point2d r_mustC2 = { (122.0+shX)/res[0], ( 102.0+shY)/res[1] };
+    double r_must2 = torusZ_2d( pos, r_mustC2, 7.0/res[0], rh );
+    cv::Point2d r_mustC3 = { (112.0+shX)/res[0], ( 104.0+shY)/res[1] };
+    double r_must3 = torusZ_2d( pos, r_mustC3, 7.0/res[0], rh );
+
+    //left mustache
+    cv::Point2d l_mustC1 = { (-112.0+shX)/res[0], (100.0+shY)/res[1] };
+    double l_must1 = torusZ_2d( pos, l_mustC1, 7.0/res[0], rh );
+    cv::Point2d l_mustC2 = { (-112.0+shX)/res[0], (102.0+shY)/res[1] };
+    double l_must2 = torusZ_2d( pos, l_mustC2, 7.0/res[0], rh );
+    cv::Point2d l_mustC3 = { (-112.0+shX)/res[0], (104.0+shY)/res[1] };
+    double l_must3 = torusZ_2d( pos, l_mustC3, 7.0/res[0], rh );
+
+    double r_must11 = intersect_function( pos.y, (1.4*shY)/res[1] - pos.y );
+    double r_must22 = union_function( union_function( r_must1, r_must2 ), r_must3 );
+    double r_mustF  = intersect_function( intersect_function( r_must22, r_must11 ), pos.y );
+
+    double l_must11 = intersect_function( -pos.y + (1.4*shY)/res[1], pos.y );
+    double l_must22 = union_function( union_function( l_must1, l_must2 ), l_must3 );
+    double l_mustF  = intersect_function( intersect_function( l_must22, l_must11 ), pos.y );
+    double mustache = union_function( r_mustF, l_mustF );
+
+    //hands
+    cv::Point2d r_handC = { (158.0+shX)/res[0], (152.5+shY)/res[1] };
+    double r_hand = sphere_2d( pos, r_handC, 30.0/res[0] );
+    cv::Point2d l_handC = { (-158.0+shX)/res[0], (152.5+shY)/res[1] };
+    double l_hand = sphere_2d( pos, l_handC, 30.0/res[0] );
+
+    double ude2 = pos.y + (150.0+shY)/res[1];
+    double ude3 = (150.0+shY)/res[1] - pos.y;
+    cv::Point2d udeC = { (0.0+shX)/res[0], (251.0+shY)/res[1] };
+    double ude1 = torusZ_2d( pos, udeC, 30.0/res[0], 0.3 );
+    double te1  = intersect_function( intersect_function( ude1, ude2 ), ude3 );
+    double te2  = union_function( union_function( te1, r_hand ), l_hand );
+
+    //final model
+    double cat0 = union_function( fin_head, fin_body );
+    double cat1 = union_function( cat0, legs );
+    double cat2 = union_function( cat1, te2 );
+    double cat  = union_function( cat2, mustache );
+
+    return cat;
 }
 
 double function_rep::HybrydFunctionRep::get_step_function_val(double frep_val, int function )
