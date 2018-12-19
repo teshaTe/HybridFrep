@@ -5,7 +5,12 @@
 
 #include <iostream>
 #include <fstream>
+
 #include <cmath>
+#include <algorithm>
+#include <numeric>
+#include <chrono>
+#include <ctime>
 
 function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params params,
                                                    int res_x, int res_y, int ddt_sh, int im_type): start_p (params.start_P.x/res_x, params.start_P.y/res_y),
@@ -14,7 +19,7 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
                                                                                                    resolution_y (res_y),
                                                                                                    cv_im_type   (im_type)
 {
-    generate_frep( geo, res_x, res_y, 0, start_p );
+    generate_frep( geo, res_x, res_y, params );
     FRep_im = get_FRep_im( &FRep_vec, geo );
     DT      = std::make_shared<distance_transform::DistanceField>( FRep_im, ddt_sh );
     drawF   = std::make_shared<draw::DrawField>();
@@ -34,10 +39,16 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
 
 #ifdef USE_DEBUG_INFO_FREP
     uchar_frep1.clear();
-    drawF.get()->draw_grey_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, 0.04, "ddt" );
 
     uchar_frep1.clear();
-    drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, 0.04, "hfrep");
+
+    std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
+    diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 100000.0 );
+
+    uchar_frep1.clear();
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &diff_field, 512, 512, 0.0,"diff_field" );
 #endif
 }
 
@@ -47,12 +58,12 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
                                                                                       resolution_x (res_x),
                                                                                       resolution_y (res_y)
 {
-    generate_frep( geo, res_x, res_y, 0, start_p );
+    generate_frep( geo, res_x, res_y, params );
 
     std::vector<double> inc_frep;
     if(ddt_sh > 0)
     {
-        inc_frep = generate_frep( geo, res_x+ddt_sh, res_y+ddt_sh, 0, start_p );
+        inc_frep = generate_frep( geo, res_x+ddt_sh, res_y+ddt_sh, params );
         DT = std::make_shared<distance_transform::DistanceField>( inc_frep, res_x+ddt_sh, res_y+ddt_sh );
     }
     else
@@ -77,21 +88,35 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
 
 #ifdef USE_DEBUG_INFO_FREP
     uchar_frep1.clear();
-    drawF.get()->draw_grey_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, "ddt1" );
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, 0.04, "ddt" );
 
     uchar_frep1.clear();
-    drawF.get()->draw_grey_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, "hfrep1");
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, 0.04, "hfrep", true);
 
     std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
-    diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 1000.0 );
+    diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 100000.0 );
 
     uchar_frep1.clear();
-    drawF.get()->draw_grey_isolines( &uchar_frep1, &diff_field, 512, 512, "diff_field" );
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &diff_field, 512, 512, 0.0,"diff_field" );
+
+
+    std::vector<double> dField_inter = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 1.0 );
+    std::vector<double> pos_val;
+    std::copy_if( dField_inter.begin(), dField_inter.end(), std::back_inserter(pos_val),
+                  std::bind(std::less<double>(), 0.0, std::placeholders::_1) );
+
+    auto val = std::minmax_element( pos_val.begin(), pos_val.end() );
+    auto min_inter = pos_val[val.first  - pos_val.begin()];
+    auto max_inter = pos_val[val.second - pos_val.begin()];
+    double aver_inter = std::accumulate(pos_val.begin(), pos_val.end(), 0.0) / double(pos_val.size());
+
+    std::cout << "\nError between HFRep and UDDT in full resolution: " << std::endl;
+    std::cout << " min_inter = " << min_inter <<" ; max_inter = " << max_inter << " ; aver_inter = " << aver_inter << std::endl;
 #endif
 }
 
-std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo, int res_x, int res_y,
-                                                                    double z, cv::Point2d init_pos, std::string file_name )
+std::vector<double> function_rep::HybrydFunctionRep::generate_frep( geometry geo, int res_x, int res_y,
+                                                                    geometry_params p, std::string file_name )
 {
     FRep_vec.clear();
     double zoom;
@@ -104,9 +129,9 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
             {
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
-                double shX = u - init_pos.x;
-                double shY = v - init_pos.y;
-                double result = R*R - shX*shX - shY*shY;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
+                double result = p.rad*p.rad/(res_x*res_x) - shX*shX - shY*shY;
                 FRep_vec.push_back(result);
             }
         }
@@ -119,10 +144,10 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
             {
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
-                double shX = u - init_pos.x;
-                double shY = v - init_pos.y;
-                double blob1 = R*R/( shX*shX + shY*shY);
-                double blob2 = R*R*0.25/((shX - 0.3)*(shX - 0.3) + (shY - 0.2)*(shY - 0.2));
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
+                double blob1 = p.rad*p.rad/(res_x*res_x*( shX*shX + shY*shY));
+                double blob2 = (p.rad*p.rad/(res_x*res_x)) *0.25/((shX - 0.3)*(shX - 0.3) + (shY - 0.2)*(shY - 0.2));
                 double result = union_function(blob1, blob2);
                 FRep_vec.push_back(result);            }
         }
@@ -135,13 +160,13 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
             {
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
-                double shX = u - init_pos.x;
-                double shY = v - init_pos.y;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
 
-                if( z == 0.0 )
+                if( p.zoom == 0.0 )
                     zoom = 4.0;
                 else
-                    zoom = z;
+                    zoom = p.zoom;
 
                 double result = std::pow(shX*zoom, 6.0) + std::pow(shY*zoom, 6.0) - shX*shX*zoom*zoom;
                 FRep_vec.push_back(result);            }
@@ -153,17 +178,17 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         {
             for(int x = 0; x < res_x; x++)
             {
-                double u   = static_cast<double>(x)/resolution_x;
-                double v   = static_cast<double>(y)/resolution_y;
-                double shX = u - init_pos.x;
-                double shY = v - init_pos.y;
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
 
-                if( z == 0.0 )
+                if( p.zoom == 0.0 )
                     zoom = 3.0;
                 else
-                    zoom = z;
+                    zoom = p.zoom;
 
-                double result = std::pow( zoom*zoom*shX*shX + zoom*zoom*shY*shY - 1.0, 3.0 ) -
+                double result = -std::pow( zoom*zoom*shX*shX + zoom*zoom*shY*shY - 1.0, 3.0 ) +
                                           zoom*zoom*shX*shX*std::pow( zoom*shY, 3.0 );
                 FRep_vec.push_back(result);            }
         }
@@ -176,16 +201,16 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
             {
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
-                double shX = u - init_pos.x;
-                double shY = v - init_pos.y;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
                 double a = 0.8;
                 double b = 0.6;
                 double k = 2.0;
 
-                if( z == 0.0 )
+                if( p.zoom == 0.0 )
                     zoom = 6.0;
                 else
-                    zoom = z;
+                    zoom = p.zoom;
 
                 double result = std::pow( zoom*zoom*shX*shX + zoom*shY*shY - a*k*k, 2.0) -
                                           b*(k*k - zoom*zoom*2.0*shX*shX)*(k*k - zoom*zoom*2.0*shY*shY);
@@ -200,19 +225,19 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
             {
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
-                double shX = u - init_pos.x;
-                double shY = v - init_pos.y;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
 
-                if( z == 0.0 )
+                if( p.zoom == 0.0 )
                     zoom = 9.0;
                 else
-                    zoom = z;
+                    zoom = p.zoom;
                 double result = std::sin(zoom*zoom*shX*shY);
                 FRep_vec.push_back(result);
             }
         }
     }
-    else if( geo == geometry::CAT )
+    else if( geo == geometry::ELF )
     {
         for (int y = 0; y < res_y; y++)
         {
@@ -220,7 +245,7 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
             {
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
-                double result = generate_cat_model( cv::Point2d(u, v), cv::Vec2i(res_x, res_y) );
+                double result = generate_elf_model( cv::Point2d(u, v), cv::Vec2i(res_x, res_y) );
                 FRep_vec.push_back(result);
             }
         }
@@ -231,8 +256,6 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
         FRep_vec.clear();
     }
 
-    return FRep_vec;
-
 #ifdef USE_DEBUG_INFO_FREP
     std::ofstream file;
     std::string file_n = "FREP_" + file_name + ".txt";
@@ -241,7 +264,11 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep(geometry geo,
 
     for (int i = 0; i < resolution_y*resolution_x; i++)
         file << FRep_vec[i] << std::endl;
+
+    file.close();
 #endif
+
+    return FRep_vec;
 }
 
 cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> *input, geometry geo, std::string file_name )
@@ -265,8 +292,8 @@ cv::Mat function_rep::HybrydFunctionRep::get_FRep_im( const std::vector<double> 
            val = input->at(i)*1000000.0;
        else if ( geo == geometry::BORG )
            val = input->at(i)*10000.0;
-       else if ( geo == geometry::CAT )
-           val = input->at(i)*10.0;
+       else if ( geo == geometry::ELF )
+           val = input->at(i)*100.0;
 
        if( val < 0.0 )
            frep_im[i] = 0;
@@ -312,7 +339,7 @@ double function_rep::HybrydFunctionRep::sphere_2d(cv::Point2d pos, cv::Point2d c
     return r*r - std::pow( pos.x - cent.x, 2.0 ) - std::pow( pos.y - cent.y, 2.0 );
 }
 
-double function_rep::HybrydFunctionRep::generate_cat_model( cv::Point2d pos, cv::Vec2i res )
+double function_rep::HybrydFunctionRep::generate_elf_model( cv::Point2d pos, cv::Vec2i res )
 {
     double shX = res[0]/2.0, shY = res[1]/3.0;
     //head
@@ -471,7 +498,7 @@ double function_rep::HybrydFunctionRep::get_step_function_val(double frep_val, i
     }
     else if ( function == 2 )
     {
-        double result = 2.0/(1+std::exp(-2.0*frep_val/0.0001))-1.0;
+        double result = 2.0/(1+std::exp(-2.0*frep_val/0.00001)) - 1.0;
         return result;
     }
     else if ( function == 3 )

@@ -19,13 +19,14 @@ enum class geometry
     CHAIR,
     CIRCLE,
     HEART,
-    CAT,
+    ELF,
     NONE
 };
 
 struct geometry_params
 {
     double rad;
+    double zoom;
     cv::Point2d start_P ;
 };
 
@@ -37,8 +38,7 @@ public:
     std::shared_ptr<draw::DrawField> drawF;
     std::shared_ptr<modified_field::ModifyField> modF;
 
-    std::vector<double> generate_frep( geometry geo, int res_x, int res_y, double z,
-                                       cv::Point2d init_pos, std::string file_name = "" );
+    std::vector<double> generate_frep(geometry geo, int res_x, int res_y, geometry_params p, std::string file_name = "" );
     void generate_hfrep( std::vector<double> *hfrep , const std::vector<double> frep,
                          const std::vector<double> *DistTr, cv::Vec2i res, std::string file_name = "" );
     void check_HFrep( std::vector<double> hfrep , std::string hfrep_check_name );
@@ -60,7 +60,7 @@ private:
     inline double union_function(double a, double b)     { return a + b + std::sqrt(a * a + b * b); }
     inline double subtract_function(double a, double b)  { return intersect_function(a, -b); }
 
-    double generate_cat_model(cv::Point2d pos, cv::Vec2i res);
+    double generate_elf_model(cv::Point2d pos, cv::Vec2i res);
     double ellipsoid_2d (cv::Point2d pos, cv::Point2d cent, double a, double b , int resx);
     double ellipticCylZ (cv::Point2d pos, cv::Point2d cent, double a, double b , int resx);
     double torusY_2d( cv::Point2d pos, cv::Point2d cent, double r, double R );
