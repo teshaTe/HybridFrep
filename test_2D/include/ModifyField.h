@@ -25,11 +25,10 @@ public:
     std::vector<double> zoom_field   ( const std::vector<double> *field, const cv::Point2i start_p,
                                        const cv::Vec2i reg_s, const cv::Vec2i fin_res);
     std::vector<double> interpolate_field( const std::vector<double> *field, const cv::Vec2i cur_res,
-                                          const cv::Vec2i fin_res, interpolation inter);
-    double get_bilinear_interpolated_val ( const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY );
-    double get_bicubic_interpolated_val2  ( const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY );
-    double get_bicubic_interpolated_val  ( const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY );
+                                           const cv::Vec2i fin_res, interpolation inter );
 
+    double get_bilinear_interpolated_val ( const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY );
+    double get_bicubic_interpolated_val  ( const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY );
 
     std::vector<double> diff_fields(const std::vector<double> *field1, const std::vector<double> *field2 , double multi);
 

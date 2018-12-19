@@ -29,42 +29,6 @@ std::vector<double> ModifyField::smooth_field( const std::vector<double> *DT, in
     return inter_result;
 }
 
-/*double ModifyField::get_bicubic_interpolated_val(const std::vector<double> *DT, int resX, int resY, int shiftX, int shiftY)
-{
-
-
-
-
-    return ;
-}*/
-double ModifyField::get_cubic_interpolated_val( const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY, double var, int shY )
-{
-    int x = clipWithBounds( int(indXY[0]), 0, res[0]-4 );
-    int y = clipWithBounds( int(indXY[1]), 0, res[1]-4 );
-    return DT->at(x+1+(y+shY)*res[0]) + 0.5 * var*( DT->at(x+2+(y+shY)*res[0]) - DT->at(x+(y+shY)*res[0]) +
-           var*(2.0*DT->at(x+(y+shY)*res[0]) - 5.0*DT->at(x+1+(y+shY)*res[0]) + 4.0*DT->at(x+2+(y+shY)*res[0]) -
-           DT->at(x+3+(y+shY)*res[0]) + var*(3.0*(DT->at(x+1+(y+shY)*res[0]) - DT->at(x+2+(y+shY)*res[0])) +
-           DT->at(x+3+(y+shY)*res[0]) - DT->at(x+(y+shY)*res[0]))));
-}
-
-double ModifyField::get_bicubic_interpolated_val2(const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY)
-{
-    std::vector<double> a; a.resize( 4 );
-    int x0 = clipWithBounds( int(indXY[0]), 0, res[0]-3 );
-    int y0 = clipWithBounds( int(indXY[1]), 0, res[1]-3 );
-    double x = x0 / res[0];
-    double y = y0 / res[1];
-
-    a[0] = get_cubic_interpolated_val(DT, res, indXY, y, 0);
-    a[1] = get_cubic_interpolated_val(DT, res, indXY, y, 1);
-    a[2] = get_cubic_interpolated_val(DT, res, indXY, y, 2);
-    a[3] = get_cubic_interpolated_val(DT, res, indXY, y, 3);
-    double result = get_cubic_interpolated_val(&a, cv::Vec2i(4, 4), indXY, x, 0);
-
-    return result;
-}
-
-
 double ModifyField::get_bicubic_interpolated_val(const std::vector<double> *DT, cv::Vec2i res, cv::Vec2f indXY)
 {
     int x = clipWithBounds( int(indXY[0]), 0, res[0]-3 );
@@ -122,8 +86,8 @@ double ModifyField::get_bicubic_interpolated_val(const std::vector<double> *DT, 
     double a33 =  4.0*f00   - 4.0*f01   - 4.0*f10   + 4.0*f11 + 2.0*fx00 - 2.0*fx01 + 2.0*fx10 - 2.0*fx11 +
                   fxy00     + fxy01     + fxy10     + fxy11   + 2.0*fy00 + 2.0*fy01 - 2.0*fy10 - 2.0*fy11;
 
-    double xN = x / res[0];
-    double yN = y / res[1];
+    double xN = indXY[0] - std::floor(indXY[0]);
+    double yN = indXY[1] - std::floor(indXY[1]);
 
     double result = a00 + yN*a01 + yN*yN*a02 + std::pow(yN, 3.0)*a03 + xN*a10 + xN*yN*a11 +
                     xN*yN*yN*a12 + xN*std::pow(yN, 3.0)*a13 + xN*xN*a20 + xN*xN*yN*a21 +
@@ -164,8 +128,10 @@ std::vector<double> ModifyField::zoom_field( const std::vector<double> *field, c
     }
     else
     {
-        std::cerr << "Uneven resolution attitude between zoomed res and region res is not supported yet! " << std::endl;
-        return *field;
+        pix_xShift = std::ceil(fin_res[0] / reg_s[0]);
+        pix_yShift = std::ceil(fin_res[1] / reg_s[1]);
+        //std::cerr << "Uneven resolution attitude between zoomed res and region res is not supported yet! " << std::endl;
+        //return *field;
     }
 
     thinned_zoomed_field.resize(reg_s[0]*reg_s[1]);
@@ -186,7 +152,7 @@ std::vector<double> ModifyField::zoom_field( const std::vector<double> *field, c
         {
             cv::Vec2f indXY = { float(x)/pix_xShift, float(y)/pix_yShift };
             try {
-                result.push_back( get_bilinear_interpolated_val( &thinned_zoomed_field, reg_s, indXY ) );
+                result.push_back( get_bicubic_interpolated_val( &thinned_zoomed_field, reg_s, indXY ) );
             } catch (const std::out_of_range& e) {
                 std::cerr << "error: " << e.what() << ",   index: " << x << ", " << y << "   " <<
                              " indXY: " << indXY[0] << ", " << indXY[1] << std::endl;
@@ -207,8 +173,10 @@ std::vector<double> ModifyField::interpolate_field(const std::vector<double> *fi
     }
     else
     {
-        std::cerr << "Uneven resolution attitude between zoomed res and region res is not supported yet! " << std::endl;
-        return *field;
+        pix_xShift = std::ceil(fin_res[0] / cur_res[0]);
+        pix_yShift = std::ceil(fin_res[1] / cur_res[1]);
+        //std::cerr << "Uneven resolution attitude between zoomed res and region res is not supported yet! " << std::endl;
+        //return *field;
     }
 
     for( int y = 0; y < fin_res[1]; ++y )
@@ -220,7 +188,7 @@ std::vector<double> ModifyField::interpolate_field(const std::vector<double> *fi
                 if( inter == interpolation::BILINEAR )
                     result.push_back( get_bilinear_interpolated_val( field, cur_res, indXY ) );
                 else if( inter == interpolation::BICUBIC )
-                    result.push_back( get_bicubic_interpolated_val( field, cur_res, indXY) );
+                    result.push_back( get_bicubic_interpolated_val( field, cur_res, indXY ) );
                 else
                 {
                     std::cerr << "Error: <interpolation inter> Unknown option passsed! " << std::endl;
