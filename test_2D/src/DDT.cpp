@@ -1,10 +1,12 @@
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+
+#include "include/DDT.h"
+
 #include <iostream>
 #include <fstream>
 #include <chrono>
-
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include "include/DDT.h"
+#include <ctime>
 
 namespace distance_transform
 {
