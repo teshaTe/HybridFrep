@@ -15,9 +15,12 @@ public:
 
     cv::Mat convert_field_to_image(std::vector<uchar> *uchar_field, const std::vector<double> *field,  int res_x,  int res_y );
 
-    void draw_field         ( std::vector<uchar> *uchar_field, const std::vector<double> *field, int res_x, int res_y, std::string file_name="" );
-    void draw_grey_isolines ( std::vector<uchar> *uchar_field, const std::vector<double> *field, int res_x, int res_y, std::string file_name="" );
-    void draw_rgb_isolines  ( std::vector<uchar> *uchar_field, const std::vector<double> *field, int res_x, int res_y, std::string file_name="" );
+    void draw_field         ( std::vector<uchar> *uchar_field, const std::vector<double> *field,
+                              int res_x, int res_y, std::string file_name="" );
+    void draw_grey_isolines ( std::vector<uchar> *uchar_field, const std::vector<double> *field,
+                              int res_x, int res_y, std::string file_name="" );
+    void draw_rgb_isolines  (std::vector<uchar> *uchar_field, const std::vector<double> *field,
+                             int res_x, int res_y, double thres, std::string file_name="" , bool sign = false);
 };
 
 } // namespace draw
