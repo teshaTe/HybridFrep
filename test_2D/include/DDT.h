@@ -25,6 +25,7 @@ public:
     ~DistanceField(){ }
 
     inline std::vector<double> get_DDT() { return DDT; }
+    inline std::vector<double> get_signed_DDT() { return SDDT; }
 
     //functions for generating distance transform using binarized input image
 private:
@@ -49,6 +50,7 @@ private:
     std::vector<Point> grid_2;
 
     std::vector<double> DDT;
+    std::vector<double> SDDT;
 };
 
 } // namespace distance_field

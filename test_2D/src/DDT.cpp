@@ -192,6 +192,7 @@ void DistanceField::generate_DF(std::vector<Point> &grid)
 void DistanceField::merge_grids(std::vector<double> &grid)
 {
     int x, y;
+    SDDT.resize( grid.size());
 
      for( y = 0; y < res_y; y++)
     {
@@ -200,6 +201,7 @@ void DistanceField::merge_grids(std::vector<double> &grid)
             double dist1 = ( std::sqrt( (double)( get_grid_element( grid_1, x, y ).square_distance() )));
             double dist2 = ( std::sqrt( (double)( get_grid_element( grid_2, x, y ).square_distance() )));
             grid[x + y * res_x] = std::abs( (dist1 - dist2) * 10.0 / INF );
+            SDDT[x + y * res_x] = (dist1 - dist2) * 10.0 / INF ;
         }
     }
 
