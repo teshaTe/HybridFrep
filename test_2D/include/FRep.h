@@ -10,6 +10,10 @@
 #include <vector>
 
 namespace function_rep {
+#define HYPERBOLIC_TANGENT 1
+#define HYPERBOLIC_SIGMOID 2
+#define ALGEBRAIC          3
+#define GUDERMANIAN        4
 
 enum class geometry
 {
@@ -20,6 +24,8 @@ enum class geometry
     CIRCLE,
     HEART,
     ELF,
+    SURIKEN,
+    QUAD,
     NONE
 };
 
@@ -27,20 +33,32 @@ struct geometry_params
 {
     double rad;
     double zoom;
+    double thres_vis_hfrep;
+    double thres_vis_ddt;
     cv::Point2d start_P ;
+};
+
+struct step_function_params
+{
+    double tangent_slope;     //
+    double sigmoid_slope;     //
+    double algebraic_slope;   //
+    double guderanian_slope;  //
 };
 
 class HybrydFunctionRep {
 
 public:
-    HybrydFunctionRep( geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh, int im_type );
-    HybrydFunctionRep( geometry geo, geometry_params params, int res_x, int res_y, int ddt_sh );
+    HybrydFunctionRep( geometry geo, geometry_params params, int step_function,
+                       step_function_params st_fun, int res_x, int res_y, int ddt_sh, int im_type );
+    HybrydFunctionRep( geometry geo, geometry_params params, int step_function,
+                       step_function_params st_fun, int res_x, int res_y, int ddt_sh );
     std::shared_ptr<draw::DrawField> drawF;
     std::shared_ptr<modified_field::ModifyField> modF;
 
     std::vector<double> generate_frep(geometry geo, int res_x, int res_y, geometry_params p, std::string file_name = "" );
-    void generate_hfrep( std::vector<double> *hfrep , const std::vector<double> frep,
-                         const std::vector<double> *DistTr, cv::Vec2i res, std::string file_name = "" );
+    void generate_hfrep(std::vector<double> *hfrep , const std::vector<double> frep,
+                         const std::vector<double> *DistTr, cv::Vec2i res, int step_function, std::string file_name = "" );
     void check_HFrep( std::vector<double> hfrep , std::string hfrep_check_name );
 
     cv::Mat get_FRep_im( const std::vector<double> *input, geometry geo, std::string file_name = "" );
@@ -79,8 +97,11 @@ private:
 
     cv::Point2d start_p;
 
-    double R, but_u;
-    double bl_phi1, bl_phi2, bl_a, bl_b;
+    double R;
+    double tangent_slope;
+    double sigmoid_slope;
+    double algebraic_slope;
+    double guardanian_slope;
 
     int resolution_x, resolution_y;
     int cv_im_type;

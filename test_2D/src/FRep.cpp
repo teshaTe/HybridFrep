@@ -12,9 +12,14 @@
 #include <chrono>
 #include <ctime>
 
-function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params params,
-                                                   int res_x, int res_y, int ddt_sh, int im_type): start_p (params.start_P.x/res_x, params.start_P.y/res_y),
-                                                                                                   R       (params.rad/res_x),
+function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params params, int step_function, step_function_params st_fun,
+                                                   int res_x, int res_y, int ddt_sh, int im_type): start_p (params.start_P.x/res_x,
+                                                                                                            params.start_P.y/res_y),
+                                                                                                   R(params.rad/res_x),
+                                                                                                   tangent_slope(st_fun.tangent_slope),
+                                                                                                   sigmoid_slope(st_fun.sigmoid_slope),
+                                                                                                   algebraic_slope(st_fun.algebraic_slope),
+                                                                                                   guardanian_slope(st_fun.guderanian_slope),
                                                                                                    resolution_x (res_x),
                                                                                                    resolution_y (res_y),
                                                                                                    cv_im_type   (im_type)
@@ -31,7 +36,7 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
     else
         sm_dist_tr = dist_tr;
 
-    generate_hfrep( &HFRep_vec, FRep_vec, &sm_dist_tr, cv::Vec2i(res_x, res_y), "hfrep");
+    generate_hfrep( &HFRep_vec, FRep_vec, &sm_dist_tr, cv::Vec2i(res_x, res_y), step_function, "hfrep");
 
     std::vector<uchar> uchar_frep1, uchar_frep;
     HFRep_im    = drawF.get()->convert_field_to_image( &uchar_frep, &HFRep_vec, resolution_x, resolution_y);
@@ -39,10 +44,10 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
 
 #ifdef USE_DEBUG_INFO_FREP
     uchar_frep1.clear();
-    drawF.get()->draw_rgb_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, 0.04, "ddt" );
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, params.thres_vis_ddt, "ddt" );
 
     uchar_frep1.clear();
-    drawF.get()->draw_rgb_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, 0.04, "hfrep");
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, params.thres_vis_hfrep, "hfrep");
 
     std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
     diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 100000.0 );
@@ -53,8 +58,14 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(geometry geo, geometry_params
 }
 
 function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, function_rep::geometry_params params,
-                                                   int res_x, int res_y, int ddt_sh): start_p (params.start_P.x/res_x, params.start_P.y/res_y),
-                                                                                      R       (params.rad/res_x),
+                                                   int step_function, step_function_params st_fun, int res_x, int res_y, int ddt_sh):
+                                                                                      start_p (params.start_P.x/res_x,
+                                                                                               params.start_P.y/res_y),
+                                                                                      R(params.rad/res_x),
+                                                                                      tangent_slope(st_fun.tangent_slope),
+                                                                                      sigmoid_slope(st_fun.sigmoid_slope),
+                                                                                      algebraic_slope(st_fun.algebraic_slope),
+                                                                                      guardanian_slope(st_fun.guderanian_slope),
                                                                                       resolution_x (res_x),
                                                                                       resolution_y (res_y)
 {
@@ -80,25 +91,11 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
     else
         sm_dist_tr = dist_tr;
 
-    generate_hfrep( &HFRep_vec, FRep_vec, &sm_dist_tr, cv::Vec2i(res_x, res_y), "hfrep");
+    generate_hfrep( &HFRep_vec, FRep_vec, &sm_dist_tr, cv::Vec2i(res_x, res_y), step_function, "hfrep");
 
     std::vector<uchar> uchar_frep1, uchar_frep;
     HFRep_im    = drawF.get()->convert_field_to_image( &uchar_frep, &HFRep_vec, resolution_x, resolution_y);
     check_HFrep( HFRep_vec, "default");
-
-#ifdef USE_DEBUG_INFO_FREP
-    uchar_frep1.clear();
-    drawF.get()->draw_rgb_isolines( &uchar_frep1, &sm_dist_tr, resolution_x, resolution_y, 0.04, "ddt" );
-
-    uchar_frep1.clear();
-    drawF.get()->draw_rgb_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, 0.04, "hfrep", true);
-
-    std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
-    diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 100000.0 );
-
-    uchar_frep1.clear();
-    drawF.get()->draw_rgb_isolines( &uchar_frep1, &diff_field, 512, 512, 0.0,"diff_field" );
-
 
     std::vector<double> dField_inter = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 1.0 );
     std::vector<double> pos_val;
@@ -112,6 +109,21 @@ function_rep::HybrydFunctionRep::HybrydFunctionRep(function_rep::geometry geo, f
 
     std::cout << "\nError between HFRep and UDDT in full resolution: " << std::endl;
     std::cout << " min_inter = " << min_inter <<" ; max_inter = " << max_inter << " ; aver_inter = " << aver_inter << std::endl;
+
+#ifdef USE_DEBUG_INFO_FREP
+    uchar_frep1.clear();
+    std::vector<double> SDDT = DT.get()->get_signed_DDT();
+    std::vector<double> sm_SDDT = modF.get()->smooth_field( &SDDT, 512, 512 );
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &sm_SDDT, resolution_x, resolution_y, params.thres_vis_ddt, "ddt", true );
+
+    uchar_frep1.clear();
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &HFRep_vec, resolution_x, resolution_y, params.thres_vis_hfrep, "hfrep", true);
+
+    std::vector<double> diff_field; diff_field.resize( HFRep_vec.size() );
+    diff_field = modF.get()->diff_fields( &HFRep_vec, &sm_dist_tr, 100000.0 );
+
+    uchar_frep1.clear();
+    drawF.get()->draw_rgb_isolines( &uchar_frep1, &diff_field, 512, 512, 0.0,"diff_field" );
 #endif
 }
 
@@ -246,6 +258,51 @@ std::vector<double> function_rep::HybrydFunctionRep::generate_frep( geometry geo
                 double u   = static_cast<double>(x)/res_x;
                 double v   = static_cast<double>(y)/res_y;
                 double result = generate_elf_model( cv::Point2d(u, v), cv::Vec2i(res_x, res_y) );
+                FRep_vec.push_back(result);
+            }
+        }
+    }
+    else if( geo == geometry::QUAD )
+    {
+        for (int y = 0; y < res_y; y++)
+        {
+            for(int x = 0; x < res_x; x++)
+            {
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
+                double result = intersect_function( 170.0/res_x - std::abs(shX) , 170.0/res_y - std::abs(shY) );
+                FRep_vec.push_back(result);
+            }
+        }
+    }
+    else if ( geo == geometry::SURIKEN )
+    {
+        for (int y = 0; y < res_y; y++)
+        {
+            for(int x = 0; x < res_x; x++)
+            {
+                double u   = static_cast<double>(x)/res_x;
+                double v   = static_cast<double>(y)/res_y;
+                double shX = u - p.start_P.x/res_x;
+                double shY = v - p.start_P.y/res_y;
+                double lb1 = shY+0.7 - (shX*2.0 + 0.3);
+                double rb1 = shY+0.7 - (-shX*2.0 + 0.3);
+                double lb2 = shY-0.1 - (shX*2.0 + 0.3);
+                double rb2 = shY-0.1 - (-shX*2.0 + 0.3);
+                double lb3 = shX+0.7 - (shY*2.0 + 0.3);
+                double rb3 = shX+0.7 - (-shY*2.0 + 0.3);
+                double lb4 = shX-0.1 - (shY*2.0 + 0.3);
+                double rb4 = shX-0.1 - (-shY*2.0 + 0.3);
+
+                double trian1 = intersect_function( intersect_function(lb1, rb1), -shY+0.2 );
+                double trian2 = intersect_function( intersect_function(-lb2, -rb2), shY+0.2 );
+                double trian3 = intersect_function( intersect_function(lb3, rb3), -shX+0.2 );
+                double trian4 = intersect_function( intersect_function(-lb4, -rb4), shX+0.2 );
+
+                //double result = trian2;
+                double result = union_function( union_function( union_function( trian1, trian2 ), trian3 ), trian4 );
                 FRep_vec.push_back(result);
             }
         }
@@ -489,26 +546,26 @@ double function_rep::HybrydFunctionRep::generate_elf_model( cv::Point2d pos, cv:
     return cat;
 }
 
-double function_rep::HybrydFunctionRep::get_step_function_val(double frep_val, int function )
+double function_rep::HybrydFunctionRep::get_step_function_val( double frep_val, int function )
 {
     if( function == 1 )
     {
-        double result = std::tanh( frep_val );
+        double result = std::tanh( tangent_slope * frep_val ); //100000.0
         return result;
     }
     else if ( function == 2 )
     {
-        double result = 2.0/(1+std::exp(-2.0*frep_val/0.00001)) - 1.0;
+        double result = 2.0/(1.0+std::exp(-2.0*frep_val/sigmoid_slope)) - 1.0;
         return result;
     }
     else if ( function == 3 )
     {
-        double result = frep_val / std::sqrt( 1.0 + frep_val * frep_val );
+        double result = frep_val / std::sqrt( algebraic_slope + frep_val * frep_val );
         return result;
     }
     else if ( function == 4 )
     {
-        double result = (4.0/M_PI) * std::tanh( std::atan( (M_PI/4.0)* frep_val ) );
+        double result = 0.642129*std::atan( std::sinh( guardanian_slope * frep_val ) ); //1000
         return result;
     }
     else
@@ -519,12 +576,12 @@ double function_rep::HybrydFunctionRep::get_step_function_val(double frep_val, i
 
 }
 
-void function_rep::HybrydFunctionRep::generate_hfrep(std::vector<double> *hfrep, const std::vector<double> frep,
-                                                     const std::vector<double> *DistTr, cv::Vec2i res, std::string file_name )
+void function_rep::HybrydFunctionRep::generate_hfrep( std::vector<double> *hfrep, const std::vector<double> frep, const std::vector<double> *DistTr,
+                                                      cv::Vec2i res, int step_function ,std::string file_name )
 {
     for(int i = 0; i < res[0]*res[1]; i++)
     {
-        double hfrep_val = get_step_function_val( frep[i], 2 ) * DistTr->at(i);
+        double hfrep_val = get_step_function_val( frep[i], step_function ) * DistTr->at(i);
         hfrep->push_back(hfrep_val);
     }
 
