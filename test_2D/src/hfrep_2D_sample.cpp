@@ -35,6 +35,10 @@ function_rep::geometry set_geometry(std::string input)
         return function_rep::geometry::BORG;
     else if( input == "elf" )
         return function_rep::geometry::ELF;
+    else if( input == "quad" )
+        return function_rep::geometry::QUAD;
+    else if( input == "suriken" )
+        return  function_rep::geometry::SURIKEN;
     else
     {
         std::cerr << "ERROR: unknown option! please specify with '-geo' [circle, quad, rectangle, triangle] \n " << std::endl;
@@ -109,12 +113,21 @@ int main(int argc, char** argv)
     }
 
     function_rep::geometry_params geo;
-    geo.start_P.x = 250.0;
-    geo.start_P.y = 250.0;
-    geo.rad       = 60.0;
-    geo.zoom      = 0.0;
+    geo.start_P.x      = 250.0;
+    geo.start_P.y      = 250.0;
+    geo.rad            = 60.0;
+    geo.zoom           = 0.0;
+    geo.thres_vis_ddt  = 0.04;
+    geo.thres_vis_hfrep = 0.05;
 
-    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, 512, 512, 0);
+    function_rep::step_function_params st_fun;
+    st_fun.sigmoid_slope    = 0.0001;
+    st_fun.tangent_slope    = 100000.0;
+    st_fun.algebraic_slope  = 0.0001;
+    st_fun.guderanian_slope = 1000.0;
+    int step_function = ALGEBRAIC;
+
+    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, step_function, st_fun, 512, 512, 0);
 
     // cv::Point2i(170, 170) is good for all shapes except heart; heart is cv::Point2i(150, 350)
     cv::Point2i start_regP;
@@ -125,7 +138,7 @@ int main(int argc, char** argv)
 
     double frep_thres;
     if(args::geometry == "elf" && !args::geometry.empty())
-        frep_thres = 0.00009;
+        frep_thres = 0.0001;
     else
         frep_thres = 0.009;
 
@@ -150,16 +163,14 @@ int main(int argc, char** argv)
     // zoom in frep field and draw it
     std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
                                                                     cv::Vec2i(512, 512));
-    img_field.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &zoomed_frep, 512, 512, 0.009,"zoomed_frep" );
 
     // generate zoomed in HFrep and draw it
     std::vector<double> ZM_hfrep_vec;
-    hfrep.generate_hfrep( &ZM_hfrep_vec, zoomed_frep, &smZoom_ddt, cv::Vec2i(512, 512), "zoomed_hfrep" );
+    hfrep.generate_hfrep( &ZM_hfrep_vec, zoomed_frep, &smZoom_ddt, cv::Vec2i(512, 512), step_function, "zoomed_ddt" );
     hfrep.check_HFrep( ZM_hfrep_vec, "zoomed" );
 
     img_field.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &ZM_hfrep_vec, 512, 512, 0.09,"zoomed_hfrep" );
+    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &ZM_hfrep_vec, 512, 512, 0.09,"zoomed_hfrep", true );
 
     //draw the difference between hfrep and ddt
     img_field.clear();
@@ -183,19 +194,24 @@ int main(int argc, char** argv)
     auto start_ddt = std::chrono::system_clock::now();
     distance_transform::DistanceField dt( frep0, 512, 512 );
     std::vector<double> ddt0   = dt.get_DDT();
-    std::vector<double> sm_ddt = hfrep.modF->smooth_field( &ddt0, 512, 512 );
+    std::vector<double> sddt   = dt.get_signed_DDT();
+
+    std::vector<double> sm_ddt  = hfrep.modF->smooth_field( &ddt0, 512, 512 );
+    std::vector<double> sm_sddt = hfrep.modF->smooth_field( &sddt, 512, 512 );
+
     auto end_ddt = std::chrono::system_clock::now();
     std::chrono::duration<double> t_ddt = end_ddt - start_ddt;
 
     //obtain sparse values for DDT
     auto start_sp_ddt = std::chrono::system_clock::now();
-    std::vector<double> sp_ddt;
+    std::vector<double> sp_ddt, sp_sddt;
     int stX = 512/128, stY= 512/128;
     for(int y = 0; y < 512; y+=stY )
     {
         for(int x = 0; x < 512; x+=stX)
         {
             sp_ddt.push_back( ddt0[x+y*512] );
+            sp_sddt.push_back( sddt[x+y*512] );
         }
     }
     auto end_sp_ddt = std::chrono::system_clock::now();
@@ -205,21 +221,25 @@ int main(int argc, char** argv)
     auto start_int_ddt = std::chrono::system_clock::now();
     std::vector<double> inter_ddt = hfrep.modF.get()->interpolate_field( &sp_ddt, cv::Vec2i(128,128),
                                                                          cv::Vec2i(512,512), modified_field::BICUBIC );
+    std::vector<double> inter_sddt = hfrep.modF.get()->interpolate_field( &sp_sddt, cv::Vec2i(128,128),
+                                                                         cv::Vec2i(512,512), modified_field::BICUBIC );
     auto end_int_ddt = std::chrono::system_clock::now();
     std::chrono::duration<double> t_int_ddt = end_int_ddt - start_int_ddt;
 
     img_field0.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &inter_ddt, 512, 512, 0.04, "ddt_512x512" );
+    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &inter_sddt, 512, 512, geo.thres_vis_ddt, "sddt_512x512", true );
+    img_field0.clear();
+    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &sp_sddt, 128, 128, geo.thres_vis_ddt, "sddt_128x128", true );
 
     //finally generate hfrep in full resolution
     auto start_hfrep =  std::chrono::system_clock::now();
     std::vector<double> hfrep0;
-    hfrep.generate_hfrep(&hfrep0, frep0, &inter_ddt, cv::Vec2i(512, 512) );
+    hfrep.generate_hfrep(&hfrep0, frep0, &inter_ddt, cv::Vec2i(512, 512), step_function );
     auto end_hfrep =  std::chrono::system_clock::now();
     std::chrono::duration<double> t_hfrep = end_hfrep - start_hfrep;
 
     img_field0.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &hfrep0, 512, 512, 0.04, "hfrep_512x512", true);
+    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &hfrep0, 512, 512, geo.thres_vis_hfrep, "hfrep_512x512", true);
 
     //calculate the difference between fields
     std::vector<double> diff_field_inter = hfrep.modF.get()->diff_fields( &hfrep0, &inter_ddt, 1000000.0 );
