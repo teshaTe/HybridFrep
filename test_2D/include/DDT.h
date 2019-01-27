@@ -11,25 +11,29 @@ namespace distance_transform
 
 struct Point
 {
-  Point(double dx, double dy);
-  double m_dx, m_dy;
-  double square_distance();
+    Point(double dx, double dy) : m_dx(dx), m_dy(dy) { }
+    double m_dx, m_dy;
+    double square_distance() { return (std::pow(m_dx, 2.0) + std::pow(m_dy, 2.0)); }
 };
 
-class DistanceField
+class DiscreteDistanceTransform
 {
 
 public:
-    DistanceField( cv::Mat img, int b_sh );
-    DistanceField(std::vector<double> field, int f_width, int f_height );
-    ~DistanceField(){ }
+    DiscreteDistanceTransform( cv::Mat img, int b_sh );
+    DiscreteDistanceTransform( int grWidth, int grHeight );
+    ~DiscreteDistanceTransform(){ }
+
+    void caclulateDiscreteDistanceTransformVec( std::vector<double> *inField );
+    void caclulateDiscreteDistanceTransformImg( );
+
 
     inline std::vector<double> get_DDT() { return DDT; }
     inline std::vector<double> get_signed_DDT() { return SDDT; }
 
     //functions for generating distance transform using binarized input image
 private:
-    inline int   calculate_inf() { return std::max(res_x, res_y) + 1; }
+    inline double   calculate_inf() { return std::max(res_x, res_y) + 1; }
     inline Point get_grid_element(std::vector<Point> &grid, int x, int y) { return grid[x + y * res_x]; }
     inline void  fill_grid_element(std::vector<Point> &grid, Point point, int x, int y) { grid[x + y * res_x] = point; }
 
@@ -41,10 +45,11 @@ private:
 
 private:
     int res_x, res_y, b_sh;
+    cv::Mat newSrc;
 
-    const int INF;
-    const Point INSIDE;
-    const Point EMPTY;
+    double INF;
+    Point INSIDE;
+    Point EMPTY;
 
     std::vector<Point> grid_1;
     std::vector<Point> grid_2;

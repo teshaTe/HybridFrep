@@ -112,22 +112,25 @@ int main(int argc, char** argv)
         }
     }
 
-    function_rep::geometry_params geo;
+    function_rep::geometryParams geo;
     geo.start_P.x      = 250.0;
     geo.start_P.y      = 250.0;
     geo.rad            = 60.0;
     geo.zoom           = 0.0;
-    geo.thres_vis_ddt  = 0.04;
-    geo.thres_vis_hfrep = 0.05;
 
-    function_rep::step_function_params st_fun;
+    function_rep::stepFuncParams st_fun;
     st_fun.sigmoid_slope    = 0.0001;
     st_fun.tangent_slope    = 100000.0;
     st_fun.algebraic_slope  = 0.0001;
     st_fun.guderanian_slope = 1000.0;
-    int step_function = ALGEBRAIC;
+    int step_function = HYPERBOLIC_SIGMOID;
 
-    function_rep::HybrydFunctionRep hfrep(set_geometry(args::geometry), geo, step_function, st_fun, 512, 512, 0);
+    double thres_vis_ddt   = 0.04;
+    double thres_vis_hfrep = 0.05;
+
+    function_rep::HybrydFunctionRep hfrep( 512, 512, 0 );
+    modified_field::ModifyField modField;
+    draw::DrawField drawField;
 
     // cv::Point2i(170, 170) is good for all shapes except heart; heart is cv::Point2i(150, 350)
     cv::Point2i start_regP;
@@ -136,73 +139,56 @@ int main(int argc, char** argv)
     else
         start_regP = cv::Point2i(170, 170);
 
-    double frep_thres;
+    double thres_viz_frep;
     if(args::geometry == "elf" && !args::geometry.empty())
-        frep_thres = 0.0001;
+        thres_viz_frep = 0.0001;
     else
-        frep_thres = 0.009;
+        thres_viz_frep = 0.009;
 
     //******************************************************************************************************
     //Zooming operation
     //******************************************************************************************************
 
     //getting distance transform, zoom in, smooth, draw it
-    std::vector<double> dist_tr    = hfrep.get_DDT();
-    std::vector<double> zoomed_ddt = hfrep.modF.get()->zoom_field( &dist_tr, start_regP, cv::Vec2i(128, 128),
-                                                                    cv::Vec2i(512, 512));
-    std::vector<double> smZoom_ddt = hfrep.modF.get()->smooth_field( &zoomed_ddt, 512, 512 );
+    std::vector<double> dist_tr    = hfrep.precalcDDT( set_geometry(args::geometry), geo );
+    std::vector<double> zoomed_ddt = modField.zoom_field( &dist_tr, start_regP, cv::Vec2i(128, 128), cv::Vec2i(512, 512));
 
     std::vector<uchar> img_field;
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &smZoom_ddt, 512, 512, 0.09,"zoomed_ddt" );
 
     // get frep field and draw it
-    img_field.clear();
-    std::vector<double> frep_vec = hfrep.get_frep_vec();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &frep_vec, 512, 512, frep_thres, "frep_field", true );
+    std::vector<double> frep_vec = hfrep.precalcFRep( set_geometry(args::geometry), geo );
 
     // zoom in frep field and draw it
-    std::vector<double> zoomed_frep = hfrep.modF.get()->zoom_field( &frep_vec, start_regP, cv::Vec2i(128, 128),
-                                                                    cv::Vec2i(512, 512));
+    std::vector<double> zoomed_frep = modField.zoom_field( &frep_vec, start_regP, cv::Vec2i(128, 128), cv::Vec2i(512, 512));
 
     // generate zoomed in HFrep and draw it
     std::vector<double> ZM_hfrep_vec;
-    hfrep.generate_hfrep( &ZM_hfrep_vec, zoomed_frep, &smZoom_ddt, cv::Vec2i(512, 512), step_function, "zoomed_ddt" );
-    hfrep.check_HFrep( ZM_hfrep_vec, "zoomed" );
+    hfrep.calculateHFRep( set_geometry(args::geometry), geo, step_function, st_fun, &zoomed_frep, &zoomed_ddt );
+    ZM_hfrep_vec = hfrep.getHFRepVec();
+
+    hfrep.checkHFrep( &ZM_hfrep_vec, "zoomed" );
 
     img_field.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &ZM_hfrep_vec, 512, 512, 0.09,"zoomed_hfrep", true );
+    drawField.draw_rgb_isolines( &img_field, &ZM_hfrep_vec, 512, 512, 0.09, "zoomed_hfrep", true );
 
     //draw the difference between hfrep and ddt
     img_field.clear();
-    std::vector<double> diff_field = hfrep.modF.get()->diff_fields( &ZM_hfrep_vec, &smZoom_ddt, 1000000.0 );
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field, &diff_field, 512, 512, 0.0, "zoomed_diff_field" );
+    std::vector<double> sm_zoomed_ddt = modField.smooth_field(&zoomed_ddt, 512, 512 );
+    std::vector<double> diff_field = modField.diff_fields( &ZM_hfrep_vec, &sm_zoomed_ddt, 100000.0 );
+    drawField.draw_rgb_isolines(&img_field, &diff_field, 512, 512, 0.0, "zoomed_diff_field");
 
     //******************************************************************************************************
     //interpolation if the field is sparse
     //******************************************************************************************************
 
     //generating frep in full resolution
-    std::vector<double> frep0;
-    std::vector<uchar> img_field0;
-
-    auto start_frep = std::chrono::system_clock::now();
-    frep0 = hfrep.generate_frep( set_geometry(args::geometry), 512, 512, geo );
-    auto end_frep   = std::chrono::system_clock::now();
-    std::chrono::duration<double> t_frep = end_frep - start_frep;
-
-    //generating ddt in full resolution
-    auto start_ddt = std::chrono::system_clock::now();
-    distance_transform::DistanceField dt( frep0, 512, 512 );
-    std::vector<double> ddt0   = dt.get_DDT();
-    std::vector<double> sddt   = dt.get_signed_DDT();
-
-    std::vector<double> sm_ddt  = hfrep.modF->smooth_field( &ddt0, 512, 512 );
-    std::vector<double> sm_sddt = hfrep.modF->smooth_field( &sddt, 512, 512 );
-
-    auto end_ddt = std::chrono::system_clock::now();
-    std::chrono::duration<double> t_ddt = end_ddt - start_ddt;
-
     //obtain sparse values for DDT
+    hfrep.calculateHFRep(set_geometry(args::geometry), geo, step_function, st_fun, nullptr, nullptr );
+    hfrep.getFieldImages( thres_viz_frep, thres_vis_ddt, thres_vis_hfrep);
+
+    std::vector<double> ddt  = hfrep.precalcDDT( set_geometry(args::geometry), geo);
+    std::vector<double> sddt = hfrep.precalcDDT( set_geometry(args::geometry), geo, true );
+
     auto start_sp_ddt = std::chrono::system_clock::now();
     std::vector<double> sp_ddt, sp_sddt;
     int stX = 512/128, stY= 512/128;
@@ -210,7 +196,7 @@ int main(int argc, char** argv)
     {
         for(int x = 0; x < 512; x+=stX)
         {
-            sp_ddt.push_back( ddt0[x+y*512] );
+            sp_ddt.push_back( ddt[x+y*512] );
             sp_sddt.push_back( sddt[x+y*512] );
         }
     }
@@ -219,37 +205,39 @@ int main(int argc, char** argv)
 
     //interpolate between sparse values for DDT
     auto start_int_ddt = std::chrono::system_clock::now();
-    std::vector<double> inter_ddt = hfrep.modF.get()->interpolate_field( &sp_ddt, cv::Vec2i(128,128),
+    std::vector<double> inter_ddt = modField.interpolate_field( &sp_ddt, cv::Vec2i(128,128),
                                                                          cv::Vec2i(512,512), modified_field::BICUBIC );
-    std::vector<double> inter_sddt = hfrep.modF.get()->interpolate_field( &sp_sddt, cv::Vec2i(128,128),
-                                                                         cv::Vec2i(512,512), modified_field::BICUBIC );
+    std::vector<double> inter_sddt = modField.interpolate_field( &sp_sddt, cv::Vec2i(128,128),
+                                                                           cv::Vec2i(512,512), modified_field::BICUBIC );
     auto end_int_ddt = std::chrono::system_clock::now();
     std::chrono::duration<double> t_int_ddt = end_int_ddt - start_int_ddt;
 
-    img_field0.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &inter_sddt, 512, 512, geo.thres_vis_ddt, "sddt_512x512", true );
-    img_field0.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &sp_sddt, 128, 128, geo.thres_vis_ddt, "sddt_128x128", true );
+    std::vector<uchar> img_field0;
 
-    //finally generate hfrep in full resolution
-    auto start_hfrep =  std::chrono::system_clock::now();
-    std::vector<double> hfrep0;
-    hfrep.generate_hfrep(&hfrep0, frep0, &inter_ddt, cv::Vec2i(512, 512), step_function );
-    auto end_hfrep =  std::chrono::system_clock::now();
+    drawField.draw_rgb_isolines( &img_field0, &inter_sddt, 512, 512, thres_vis_ddt , "sddt_512x512", true );
+    img_field0.clear();
+    drawField.draw_rgb_isolines( &img_field0, &sp_sddt, 128, 128, thres_vis_ddt , "sddt_128x128", true );
+
+    auto start_hfrep = std::chrono::system_clock::now();
+    hfrep.calculateHFRep( set_geometry(args::geometry), geo, step_function, st_fun, nullptr, &inter_ddt );
+    std::vector<double> hfrep0 = hfrep.getHFRepVec();
+    auto end_hfrep   = std::chrono::system_clock::now();
     std::chrono::duration<double> t_hfrep = end_hfrep - start_hfrep;
 
-    img_field0.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &hfrep0, 512, 512, geo.thres_vis_hfrep, "hfrep_512x512", true);
+    hfrep.checkHFrep(&hfrep0, "hfrep0_checking");
+
+    drawField.draw_rgb_isolines( &img_field0, &hfrep0, 512, 512, thres_vis_hfrep , "hfrep_512x512", true);
 
     //calculate the difference between fields
-    std::vector<double> diff_field_inter = hfrep.modF.get()->diff_fields( &hfrep0, &inter_ddt, 1000000.0 );
+    std::vector<double> sm_inter_ddt = modField.smooth_field(&inter_ddt, 512, 512);
+    std::vector<double> diff_field_inter = modField.diff_fields( &hfrep0, &sm_inter_ddt, 100000.0 );
     img_field0.clear();
-    hfrep.drawF.get()->draw_rgb_isolines( &img_field0, &diff_field_inter, 512, 512, 0.0,"diff_hfrep_512x512" );
+    drawField.draw_rgb_isolines( &img_field0, &diff_field_inter, 512, 512, 0.0, "diff_hfrep_512x512" );
 
     //******************************************************************************************************
     //estimating error for interpolated case
     //******************************************************************************************************
-    std::vector<double> dField_inter = hfrep.modF.get()->diff_fields( &hfrep0, &inter_ddt, 1.0 );
+    std::vector<double> dField_inter = modField.diff_fields( &hfrep0, &inter_ddt, 1.0 );
 
     std::vector<double> pos_val;
     std::copy_if( dField_inter.begin(), dField_inter.end(), std::back_inserter(pos_val),
@@ -261,11 +249,10 @@ int main(int argc, char** argv)
     double aver_inter = std::accumulate(pos_val.begin(), pos_val.end(), 0.0) / double(pos_val.size());
 
     std::cout << "\nError after using bicubic interpolation: " << std::endl;
-    std::cout << " min_inter = " << min_inter <<" ; max_inter = " << max_inter << " ; aver_inter = " << aver_inter << std::endl;
+    std::cout << " min_inter = " << min_inter <<" ; max_inter = " << max_inter <<
+                 " ; aver_inter = " << aver_inter << std::endl;
 
     std::cout << "Timings: " << std::endl;
-    std::cout << "FRep ex. [sec.]        : " << t_frep.count()    << std::endl;
-    std::cout << "DDT  ex. [sec.]        : " << t_ddt.count()     << std::endl;
     std::cout << "DDT_sparse ex. [sec.]  : " << t_sp_ddt.count()  << std::endl;
     std::cout << "DDT_interpol.ex.[sec.] : " << t_int_ddt.count() << std::endl;
     std::cout << "HFRep ex. [sec.]       : " << t_hfrep.count()   << std::endl;

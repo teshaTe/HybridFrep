@@ -208,7 +208,7 @@ std::vector<double> ModifyField::diff_fields(const std::vector<double> *field1, 
 {
     std::vector<double> result;
     for(int i = 0; i < field1->size(); i++)
-        result.push_back( std::abs( std::abs(field1->at(i)) - field2->at(i) ) * multi); // multi = 10000.0
+         result.push_back( std::abs( std::abs(field1->at(i)) - field2->at(i) ) * multi); // multi = 10000.0
 
     return result;
 }

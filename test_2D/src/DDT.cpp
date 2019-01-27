@@ -11,43 +11,48 @@
 namespace distance_transform
 {
 
-Point::Point(double dx, double dy) : m_dx(dx), m_dy(dy) { }
-double Point::square_distance() { return (std::pow(m_dx, 2.0) + std::pow(m_dy, 2.0)); }
+//Point::Point(double dx, double dy) : m_dx(dx), m_dy(dy) { }
+//double Point::square_distance() { return (std::pow(m_dx, 2.0) + std::pow(m_dy, 2.0)); }
 
-DistanceField::DistanceField( cv::Mat img, int bo_sh ): res_x(img.cols+bo_sh),
-                                                        res_y(img.rows+bo_sh),
-                                                        b_sh(bo_sh),
-                                                        INF(calculate_inf()),
-                                                        INSIDE(INF, INF),
-                                                        EMPTY(0.0, 0.0),
-                                                        grid_1(res_x * res_y, INSIDE),
-                                                        grid_2(res_x * res_y, INSIDE),
-                                                        DDT(res_x*res_y, 0.0)
+DiscreteDistanceTransform::DiscreteDistanceTransform( cv::Mat img, int b_sh ) : res_x( img.cols ),
+                                                                                res_y( img.rows ),
+                                                                                INF(calculate_inf()),
+                                                                                INSIDE( INF, INF ),
+                                                                                EMPTY( 0.0, 0.0 ),
+                                                                                grid_1(res_x*res_y, INSIDE),
+                                                                                grid_2(res_x*res_y, INSIDE),
+                                                                                DDT( res_x*res_y, 0.0 )
 {
-    cv::Mat new_src;
-    cv::copyMakeBorder( img, new_src, 0, b_sh, 0, b_sh, cv::BORDER_REPLICATE );
-    create_grid( &new_src );
+    cv::copyMakeBorder( img, newSrc, 0, b_sh, 0, b_sh, cv::BORDER_REPLICATE );
+}
+
+DiscreteDistanceTransform::DiscreteDistanceTransform( int grWidth, int grHeight ): res_x( grWidth ),
+                                                                                   res_y( grHeight ),
+                                                                                   INF(calculate_inf()),
+                                                                                   INSIDE( INF, INF ),
+                                                                                   EMPTY( 0.0, 0.0 ),
+                                                                                   grid_1(res_x*res_y, INSIDE),
+                                                                                   grid_2(res_x*res_y, INSIDE),
+                                                                                   DDT( res_x*res_y, 0.0 )
+{ }
+
+void DiscreteDistanceTransform::caclulateDiscreteDistanceTransformVec(std::vector<double> *inField)
+{
+    create_grid(nullptr, inField);
     generate_DF(grid_1);
     generate_DF(grid_2);
     merge_grids(DDT);
 }
 
-DistanceField::DistanceField(std::vector<double> field, int f_width, int f_height ): res_x(f_width),
-                                                                                     res_y(f_height),
-                                                                                     INF(calculate_inf()),
-                                                                                     INSIDE(INF, INF),
-                                                                                     EMPTY(0.0, 0.0),
-                                                                                     grid_1(res_x * res_y, INSIDE),
-                                                                                     grid_2(res_x * res_y, INSIDE),
-                                                                                     DDT(res_x*res_y, 0.0)
+void DiscreteDistanceTransform::caclulateDiscreteDistanceTransformImg()
 {
-    create_grid(nullptr, &field);
+    create_grid( &newSrc, nullptr);
     generate_DF(grid_1);
     generate_DF(grid_2);
     merge_grids(DDT);
 }
 
-cv::Mat DistanceField::binarize_input( cv::Mat src)
+cv::Mat DiscreteDistanceTransform::binarize_input( cv::Mat src)
 {
     cv::Mat dst_gray, dst_bw;
     if(src.channels() > 1)
@@ -72,7 +77,7 @@ cv::Mat DistanceField::binarize_input( cv::Mat src)
 /*
  * create_grid() - function which preinitialize DDT grid for further calculations
  */
-void DistanceField::create_grid( cv::Mat *img, std::vector<double> *field )
+void DiscreteDistanceTransform::create_grid( cv::Mat *img, std::vector<double> *field )
 {
     if(img != nullptr)
     {
@@ -123,7 +128,7 @@ void DistanceField::create_grid( cv::Mat *img, std::vector<double> *field )
 /*
  * compare_grid_points(...) - function for comparing values in DDT grid  (8 neighbours algorithm is made)
  */
-void DistanceField::compare_grid_points(std::vector<Point> &grid, Point &point, int offsetx, int offsety, int x, int y)
+void DiscreteDistanceTransform::compare_grid_points(std::vector<Point> &grid, Point &point, int offsetx, int offsety, int x, int y)
 {
     if(x + offsetx >= 0 && x + offsetx < res_x &&
        y + offsety >= 0 && y + offsety < res_y)
@@ -141,7 +146,7 @@ void DistanceField::compare_grid_points(std::vector<Point> &grid, Point &point, 
  * generate_DF(...) - function which allows one to calculate distance field using 8-point algorithm.
  *                    the central point is chosen and comparing algorithm is called looking in 8 neighbours around
  */
-void DistanceField::generate_DF(std::vector<Point> &grid)
+void DiscreteDistanceTransform::generate_DF(std::vector<Point> &grid)
 {
 // Pass 0: firstly filtering grid in forward manner on both x & y, then on x in reverse manner
     for (int y1 = 0; y1 < res_y; y1++)
@@ -189,7 +194,7 @@ void DistanceField::generate_DF(std::vector<Point> &grid)
 /*
  * merge_grids(...) - the 8-point algorithm generates 2 grids which are finally merged in one with sign defined
  */
-void DistanceField::merge_grids(std::vector<double> &grid)
+void DiscreteDistanceTransform::merge_grids(std::vector<double> &grid)
 {
     int x, y;
     SDDT.resize( grid.size());
