@@ -1,27 +1,29 @@
-#include "include/DrawField.h"
+#include "include/render2D.h"
 #include "opencv2/highgui.hpp"
 
 #include <algorithm>
 
-namespace draw {
+namespace hfrep2D {
 
-cv::Mat DrawField::convert_field_to_image(std::vector<uchar> *uchar_field, const std::vector<double> *field, const int res_x, const int res_y)
+cv::Mat render2D::convert_field_to_image( std::vector<uchar> *uchar_field, const std::vector<float> *field,
+                                          const int res_x, const int res_y )
 {
+    uchar_field->clear();
     cv::Mat dst = cv::Mat( res_x, res_y, CV_8UC1 );
     uchar_field->resize(res_x*res_y);
 
-    double dist;
+    float dist;
 
     for( int i = 0; i < res_x*res_y; i++ )
     {
-        if( std::abs(field->at(i)) < 0.0009 )
-            dist = std::abs( field->at(i) ) * 20.0*1000 + 128.0;
+        if( std::abs(field->at(i)) < 0.0009f )
+            dist = std::abs( field->at(i) ) * 20.0f*1000.0f + 128.0f;
         else
-            dist = std::abs( field->at(i) ) * 20.0 + 128.0;
+            dist = std::abs( field->at(i) ) * 20.0f + 128.0f;
 
-        if( dist < 0.0 )
+        if( dist < 0.0f )
             uchar_field->at(i) = 0;
-        else if( dist > 255.0 )
+        else if( dist > 255.0f )
             uchar_field->at(i) = 255;
         else
             uchar_field->at(i) = static_cast<uchar>(dist);
@@ -31,14 +33,16 @@ cv::Mat DrawField::convert_field_to_image(std::vector<uchar> *uchar_field, const
     return dst;
 }
 
-void DrawField::draw_field( std::vector<uchar> *uchar_field, const std::vector<double> *field, const int res_x, const int res_y, std::string file_name )
+void render2D::drawField( std::vector<uchar> *uchar_field, const std::vector<float> *field,
+                          const int res_x, const int res_y, std::string file_name )
 {
     cv::Mat dst = convert_field_to_image( uchar_field, field, res_x, res_y);
     std::string ddt_file_name = "field_im_" + file_name + ".png";
     cv::imwrite(ddt_file_name, dst);
 }
 
-void DrawField::draw_grey_isolines(std::vector<uchar> *uchar_field, const std::vector<double> *field, const int res_x, const int res_y, std::string file_name)
+void render2D::drawGrey_isolines( std::vector<uchar> *uchar_field, const std::vector<float> *field,
+                                 const int res_x, const int res_y, std::string file_name )
 {
     convert_field_to_image( uchar_field, field, res_x, res_y );
     std::vector<uchar> ISO_UDDT;
@@ -65,14 +69,14 @@ void DrawField::draw_grey_isolines(std::vector<uchar> *uchar_field, const std::v
     cv::imwrite(ddt_file_name, dst);
 }
 
-void DrawField::draw_rgb_isolines( std::vector<uchar> *uchar_field, const std::vector<double> *field,
-                                  const int res_x, const int res_y, double thres, std::string file_name, bool sign)
+void render2D::drawRGB_isolines( std::vector<uchar> *uchar_field, const std::vector<float> *field,
+                                const int res_x, const int res_y, float thres, std::string file_name, bool sign )
 {
     cv::Mat dst = cv::Mat( res_x, res_y, CV_8UC3 );
     unsigned char *dst_buf = static_cast<unsigned char*>(dst.data);
     int d_ch      = dst.channels();
     size_t d_step = dst.step;
-    int col_st = 5;
+    int col_st    = 5;
 
     convert_field_to_image(uchar_field, field, res_x, res_y);
 
@@ -84,7 +88,7 @@ void DrawField::draw_rgb_isolines( std::vector<uchar> *uchar_field, const std::v
             {
                 for(int i = 0; i <= 255-col_st; i+=col_st)
                 {
-                    if( field->at(x+y*res_x) < 0.0 )
+                    if( field->at(x+y*res_x) < 0.0f )
                     {
                         if( i <= uchar_field->at(x+y*res_x) && uchar_field->at(x+y*res_x) <= i+col_st )
                         {
@@ -94,7 +98,7 @@ void DrawField::draw_rgb_isolines( std::vector<uchar> *uchar_field, const std::v
                             break;
                         }
                     }
-                    else if( field->at(x+y*res_x) < thres && field->at(x+y*res_x) > 0.0 )
+                    else if( field->at(x+y*res_x) < thres && field->at(x+y*res_x) > 0.0f )
                     {
                         dst_buf[x*d_ch+y*d_step]   = 0;
                         dst_buf[x*d_ch+1+y*d_step] = 0;
@@ -142,7 +146,7 @@ void DrawField::draw_rgb_isolines( std::vector<uchar> *uchar_field, const std::v
                         }
                     }
 
-                    if( field->at(x+y*res_x) < thres && field->at(x+y*res_x) > 0.0 )
+                    if( field->at(x+y*res_x) < thres && field->at(x+y*res_x) > 0.0f )
                     {
                         dst_buf[x*d_ch+y*d_step]   = 0;
                         dst_buf[x*d_ch+1+y*d_step] = 0;
@@ -159,4 +163,4 @@ void DrawField::draw_rgb_isolines( std::vector<uchar> *uchar_field, const std::v
 }
 
 
-} // namespace draw
+} // namespace hfrep2D
