@@ -3,12 +3,12 @@
 namespace distance_transform_3D {
 
 distanceTransform3D::distanceTransform3D(int gridW, int gridH, int gridD): voxGrW( gridW ), voxGrH( gridH ), voxGrD( gridD ),
-                                                                       INF(calcINFval()), INSIDE( 0.0f, 0.0f, 0.0f ),
-                                                                       OUTSIDE( INF, INF, INF ),
-                                                                       vGrid1( static_cast<int>(gridW*gridH*gridD), INSIDE),
-                                                                       vGrid2( static_cast<int>(gridW*gridH*gridD), INSIDE),
-                                                                       DDT3D(  static_cast<int>(gridW*gridH*gridD), 0.0f),
-                                                                       SDDT3D( static_cast<int>(gridW*gridH*gridD), 0.0f)
+                                                                           INF(calcINFval()), INSIDE( 0.0f, 0.0f, 0.0f ),
+                                                                           OUTSIDE( INF, INF, INF ),
+                                                                           vGrid1( gridW*gridH*gridD, INSIDE),
+                                                                           vGrid2( gridW*gridH*gridD, INSIDE),
+                                                                           DDT3D(  gridW*gridH*gridD, 0.0f),
+                                                                           SDDT3D( gridW*gridH*gridD, 0.0f)
 { }
 
 void distanceTransform3D::caclulateDiscreteDistanceTransform(std::vector<float> *inField)
@@ -48,7 +48,6 @@ void distanceTransform3D::initializeVoxelGrid(std::vector<float> *field )
     }
 }
 
-//TODO: int -> int as offsets can be not subtractd propperly due to types [CHECK]
 void distanceTransform3D::compareVoxelVectors( std::vector<Point3D> &voxGrid, Point3D &curPoint,
                                              int offsetX, int offsetY, int offsetZ,
                                              int x, int y, int z )
@@ -77,47 +76,44 @@ void distanceTransform3D::traverseVoxelGridForwardPass(std::vector<Point3D> &gri
             for ( int x = 0; x < voxGrW; x++ )
             {
                 //F - forward mask shifting + x,y,z - allong which axe
-                int indFxyz = index( x, y, z );
-                Point3D point  = getVoxGridElement( grid, indFxyz );
+                int indFxyz   = index( x, y, z );
+                Point3D point = getVoxGridElement( grid, indFxyz );
                 compareVoxelVectors( grid, point, -1,  0,  0, x, y, z );
                 compareVoxelVectors( grid, point,  0,  0, -1, x, y, z );
                 compareVoxelVectors( grid, point,  0, -1,  0, x, y, z );
                 fillVoxGridElement( grid, point, indFxyz );
             }
 
-            for ( int x = static_cast<int>( voxGrW-1 ); x >= 0; x--)
+            for ( int x =  voxGrW-1; x >= 0; x--)
             {
                 //F - forward mask shifting, B - backward mask shifting + x,y,z - allong which axe
-                int indBxFyz = index(x, y, z);
-                Point3D point   = getVoxGridElement( grid, indBxFyz );
+                int indBxFyz  = index(x, y, z);
+                Point3D point = getVoxGridElement( grid, indBxFyz );
                 compareVoxelVectors( grid, point, 0, -1, 0, x, y, z );
                 compareVoxelVectors( grid, point, 1,  0, 0, x, y, z );
                 fillVoxGridElement( grid, point, indBxFyz );
             }
         }
-    }
 
-    for ( int z = 0 ; z < voxGrD; z++ )
-    {
         for ( int y = voxGrH-1; y >= 0; y-- )
         {
-            for ( int x = 0 ; x < voxGrW; x++ )
+            for ( int x =  voxGrW-1; x >= 0; x-- )
             {
                 //F - forward mask shifting + x,y,z - allong which axe
-                int indByFxz = index( x, y, z );
-                Point3D point   = getVoxGridElement( grid, indByFxz );
-                compareVoxelVectors( grid, point, -1, 0, 0, x, y, z );
-                compareVoxelVectors( grid, point,  0, 1, 0, x, y, z );
+                int indByFxz  = index( x, y, z );
+                Point3D point = getVoxGridElement( grid, indByFxz );
+                compareVoxelVectors( grid, point, 1, 0, 0, x, y, z );
+                compareVoxelVectors( grid, point, 0, 1, 0, x, y, z );
                 fillVoxGridElement( grid, point, indByFxz );
             }
 
-            for ( int x =  voxGrW-1; x >= 0; x-- )
+            for ( int x = 0; x < voxGrW; x++ )
             {
                 //F - forward mask shifting, B - backward mask shifting + x,y,z - allong which axe
-                int indBxyFz = index(x, y, z);
-                Point3D point   = getVoxGridElement( grid, indBxyFz );
-                compareVoxelVectors( grid, point, 0, 1, 0, x, y, z );
-                compareVoxelVectors( grid, point, 1, 0, 0, x, y, z );
+                int indBxyFz  = index(x, y, z);
+                Point3D point = getVoxGridElement( grid, indBxyFz );
+                compareVoxelVectors( grid, point,  0, 1, 0, x, y, z );
+                compareVoxelVectors( grid, point, -1, 0, 0, x, y, z );
                 fillVoxGridElement( grid, point, indBxyFz );
             }
         }
@@ -133,8 +129,8 @@ void distanceTransform3D::traverseVoxelGridBackwardPass(std::vector<Point3D> &gr
             for ( int x = voxGrW-1; x >= 0 ; x-- )
             {
                 //F - forward mask shifting + x,y,z - allong which axe
-                int indBxyz = index( x, y, z );
-                Point3D point  = getVoxGridElement( grid, indBxyz );
+                int indBxyz   = index( x, y, z );
+                Point3D point = getVoxGridElement( grid, indBxyz );
                 compareVoxelVectors( grid, point, 0, 1, 0, x, y, z );
                 compareVoxelVectors( grid, point, 1, 0, 0, x, y, z );
                 compareVoxelVectors( grid, point, 0, 0, 1, x, y, z );
@@ -144,24 +140,21 @@ void distanceTransform3D::traverseVoxelGridBackwardPass(std::vector<Point3D> &gr
             for ( int x = 0; x > voxGrW; x++)
             {
                 //F - forward mask shifting, B - backward mask shifting + x,y,z - allong which axe
-                int indByzFx = index(x, y, z);
-                Point3D point   = getVoxGridElement( grid, indByzFx );
+                int indByzFx  = index(x, y, z);
+                Point3D point = getVoxGridElement( grid, indByzFx );
                 compareVoxelVectors( grid, point,  0, 1, 0, x, y, z );
                 compareVoxelVectors( grid, point, -1, 0, 0, x, y, z );
                 fillVoxGridElement( grid, point, indByzFx );
             }
         }
-    }
 
-    for ( int z = voxGrD-1 ; z >= 0; z-- )
-    {
         for ( int y = 0; y < voxGrH; y++ )
         {
             for ( int x = 0; x < voxGrW; x++ )
             {
                 //F - forward mask shifting + x,y,z - allong which axe
-                int indBzFxy = index( x, y, z );
-                Point3D point   = getVoxGridElement( grid, indBzFxy );
+                int indBzFxy  = index( x, y, z );
+                Point3D point = getVoxGridElement( grid, indBzFxy );
                 compareVoxelVectors( grid, point, -1,  0, 0, x, y, z );
                 compareVoxelVectors( grid, point,  0, -1, 0, x, y, z );
                 fillVoxGridElement( grid, point, indBzFxy );
@@ -170,7 +163,7 @@ void distanceTransform3D::traverseVoxelGridBackwardPass(std::vector<Point3D> &gr
             for ( int x = voxGrW-1; x >= 0 ; x--)
             {
                 //F - forward mask shifting, B - backward mask shifting + x,y,z - allong which axe
-                int indBxzFy = index(x, y, z);
+                int indBxzFy  = index(x, y, z);
                 Point3D point = getVoxGridElement( grid, indBxzFy );
                 compareVoxelVectors( grid, point,  0, -1, 0, x, y, z );
                 compareVoxelVectors( grid, point,  1,  0, 0, x, y, z );
@@ -188,12 +181,12 @@ void distanceTransform3D::mergeVoxGrids()
         {
             for ( int x = 0; x < voxGrW; x++ )
             {
-                int ind  = index(x,y,z);
-                //DDT3D[ind] = std::sqrt( getVoxGridElement( vGrid1, ind ).EuclideanDist() );
+                int ind     = index(x,y,z);
                 float dist1 = std::sqrt( getVoxGridElement( vGrid1, ind ).EuclideanDist() );
                 float dist2 = std::sqrt( getVoxGridElement( vGrid2, ind ).EuclideanDist() );
-                DDT3D[ind]  = std::abs( (dist1 - dist2)*10.0f/INF );
-                SDDT3D[ind] = (dist1 - dist2)*10.0f/INF;
+                float dist  = (dist1 - dist2)*10.0f/INF;
+                DDT3D[ind]  = std::abs( dist );
+                SDDT3D[ind] = dist;
             }
         }
     }

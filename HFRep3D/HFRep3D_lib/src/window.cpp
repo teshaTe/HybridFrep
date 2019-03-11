@@ -1,4 +1,5 @@
 #include "include/window.h"
+#include <iostream>
 
 GLFW_window::window::window(GLint windowWidth, GLint windowHeight)
 {
@@ -13,6 +14,19 @@ GLFW_window::window::~window()
 {
     glfwDestroyWindow( mainWindow );
     glfwTerminate();
+}
+
+bool GLFW_window::window::checkError(int number)
+{
+    GLenum errCode = glGetError();
+    const GLubyte *errString;
+    if((errCode = glGetError()) != GL_NO_ERROR)
+    {
+        errString = gluErrorString(errCode);
+        std::cerr << "\nERROR < "<< number << " > :" << errString << std::endl;
+        return false;
+    }
+    return true;
 }
 
 bool GLFW_window::window::initialise()
@@ -54,14 +68,17 @@ bool GLFW_window::window::initialise()
         return false;
     }
 
-    if(GL_TRUE != glewGetExtension("GL_EXT_texture3D"))
+    /*if(GL_TRUE != glewGetExtension("GL_TEXTURE_3D"))
     {
-        std::cerr << "3D texture is not supported !" << std::endl;
-        return false;
+        std::cerr << "\n3D texture is not supported !\n" << std::endl;
     }
+    else {
+        glEnable(GL_TEXTURE_3D);
+    }*/
 
     glewExperimental = GL_TRUE;
     glEnable( GL_DEPTH_TEST );
+    glEnable( GL_TEXTURE_3D );
 
     glViewport( 0, 0, bufferWidth, bufferHeight );
     glfwSetWindowUserPointer( mainWindow, this );

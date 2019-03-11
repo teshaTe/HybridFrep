@@ -4,8 +4,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-
 namespace GLFW_window {
 
 class window
@@ -18,6 +16,8 @@ public:
 
     GLfloat getXchange();
     GLfloat getYchange();
+
+    bool checkError(int number);
 
     inline GLfloat getBufferWidth()  { return bufferWidth; }
     inline GLfloat getBufferHeight() { return bufferHeight; }
@@ -40,7 +40,7 @@ private:
 
     //keyboatd and mouase input handling
     static void handleKeys ( GLFWwindow *curWindow, int key, int code, int action, int mode );
-    static void handleMouse( GLFWwindow *curWindow, double xPos, double yPos );
+    static void handleMouse(GLFWwindow *curWindow, double xPos, double yPos );
 
     void createCallbacks();
 

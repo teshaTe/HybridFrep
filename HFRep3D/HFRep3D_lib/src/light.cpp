@@ -1,15 +1,13 @@
 #include "include/light.h"
 
-namespace light_space {
+namespace hfrep3D {
 
-void light::setDirectionalLight(GLfloat red, GLfloat green, GLfloat blue,
-                                GLfloat aIntensity, GLfloat dIntensity,
-                                GLfloat xDir, GLfloat yDir, GLfloat zDir)
+void light::setDirectionalLight(glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity, glm::vec3 direction)
 {
-    colour = glm::vec3( red, green, blue );
+    colour           = col;
     ambientIntensity = aIntensity;
     diffuseIntensity = dIntensity;
-    directionDLight = glm::vec3( xDir, yDir, zDir );
+    directionDLight  = direction;
 }
 
 void light::useDirectionalLight(GLfloat ambientIntensityLocation, GLfloat ambientColourLocation,
@@ -22,18 +20,16 @@ void light::useDirectionalLight(GLfloat ambientIntensityLocation, GLfloat ambien
     glUniform1f( diffuseIntensityLocation, diffuseIntensity );
 }
 
-void light::setPointLight(GLfloat red, GLfloat green, GLfloat blue,
-                          GLfloat aIntensity, GLfloat dIntensity,
-                          GLfloat xPos, GLfloat yPos, GLfloat zPos,
-                          GLfloat con, GLfloat lin, GLfloat exp)
+void light::setPointLight(glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity,
+                          glm::vec3 position, GLfloat con, GLfloat lin, GLfloat exp)
 {
-    colour = glm::vec3( red, green, blue );
+    colour           = col;
     ambientIntensity = aIntensity;
     diffuseIntensity = dIntensity;
-    positionPLight = glm::vec3( xPos, yPos, zPos );
-    constant = con;
-    linear   = lin;
-    exponent = exp;
+    positionPLight   = position;
+    constant         = con;
+    linear           = lin;
+    exponent         = exp;
 }
 
 void light::usePointLight(GLuint ambientIntensityLocation, GLuint ambientColourLocation,
@@ -51,16 +47,14 @@ void light::usePointLight(GLuint ambientIntensityLocation, GLuint ambientColourL
     glUniform1f( exponentLocation, exponent );
 }
 
-void light::setSpotLight(GLfloat red, GLfloat green, GLfloat blue,
-                         GLfloat aIntensity, GLfloat dIntensity,
-                         GLfloat xPos, GLfloat yPos, GLfloat zPos,
-                         GLfloat xDir, GLfloat yDir, GLfloat zDir,
+void light::setSpotLight(glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity,
+                         glm::vec3 position, glm::vec3 direction,
                          GLfloat con, GLfloat lin, GLfloat exp, GLfloat edg)
 {
-    setPointLight( red, green, blue, aIntensity, dIntensity, xPos, yPos, zPos, con, lin, exp );
-    directionSpLight = glm::vec3( xDir, yDir, zDir );
+    setPointLight( col, aIntensity, dIntensity, position, con, lin, exp );
+    directionSpLight = glm::vec3( direction );
 
-    edge = edg;
+    edge     = edg;
     procEdge = cosf( glm::radians( edge ));
 }
 

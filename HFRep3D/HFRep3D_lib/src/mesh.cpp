@@ -32,12 +32,11 @@ void mesh::CreateMesh(GLfloat *vertices, unsigned int *indices, unsigned int num
 
     // 1 param - layout; 2 param - 3 axes; 3 param - normalize; 4 param - vertices array can handle coords+colors, how many
     // values will be skipped; 5 param - offset, where the data starts
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 6, 0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, (void*)(sizeof(vertices[0]) * 3));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 6,
+                                            (void*)(sizeof(vertices[0]) * 3));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, (void*)(sizeof(vertices[0]) * 5));
-    glEnableVertexAttribArray(2);
 
     //unbinding above bindings
     glBindBuffer( GL_ARRAY_BUFFER, 0 );

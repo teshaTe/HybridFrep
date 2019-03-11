@@ -1,7 +1,6 @@
 #ifndef H_DDT_CLASS
 #define H_DDT_CLASS
 
-#include <iostream>
 #include <vector>
 #include <cmath>
 

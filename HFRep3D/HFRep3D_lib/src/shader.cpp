@@ -79,23 +79,34 @@ void shader::compileShader(const char *vertexCode, const char *fragmentCode)
         return;
     }
 
+    // obtaining uniform variables for the basic scene set up
     uniformProjection  = glGetUniformLocation( shaderID, "projection" );
     uniformView        = glGetUniformLocation( shaderID, "view" );
     uniformEyePosition = glGetUniformLocation( shaderID, "eyePosition" );
+    uniformModel       = glGetUniformLocation( shaderID, "model" );
+    uniformSampler3D   = glGetUniformLocation( shaderID, "HFRepField" );
+    uniformHFRepMinMax = glGetUniformLocation( shaderID, "HFRepMinMax" );
 
-    glUniform1i(uniformSampler3D, 0);
-    uniformSampler3D = glGetUniformLocation(shaderID, "HFRepField");
+    //obtaining uniform variables for setting up Ray Marching (sphere tracing)
+    uniformStepNumber   = glGetUniformLocation( shaderID, "rayMarching.numberOfSteps" );
+    uniformMinHitDist   = glGetUniformLocation( shaderID, "rayMarching.minHitDist" );
+    uniformMaxTraceDist = glGetUniformLocation( shaderID, "rayMarching.maxHitDist" );
 
-    /*uniformDirectionalLight.uniformColour  = glGetUniformLocation( shaderID, "directionalLight.base.colour" );
+    //obtaining uniform variables for setting up bounding box
+    uniformAABBmin      = glGetUniformLocation( shaderID, "AABB_min" );
+    uniformAABBmax      = glGetUniformLocation( shaderID, "AABB_max" );
+
+    //obtaining uniform variables for setting up basic directional light in the scene
+    uniformDirectionalLight.uniformColour           = glGetUniformLocation( shaderID, "directionalLight.base.colour" );
     uniformDirectionalLight.uniformAmbientIntensity = glGetUniformLocation( shaderID, "directionalLight.base.ambientIntensity" );
-
     uniformDirectionalLight.uniformDirection        = glGetUniformLocation( shaderID, "directionalLight.direction" );
     uniformDirectionalLight.uniformDiffuseIntensity = glGetUniformLocation( shaderID, "directionalLight.base.diffuseIntensity" );
-*/
-    /*uniformSpecularIntensity = glGetUniformLocation( shaderID, "material0.specularIntensity" );
-    uniformSpecularPower     = glGetUniformLocation( shaderID, "material0.specularPower" );
 
-    uniformPointLightCount = glGetUniformLocation( shaderID, "pointLightCount" );
+    uniformFresnelCoeff      = glGetUniformLocation( shaderID, "material.fresnelCoeff" );
+    uniformSpecularIntensity = glGetUniformLocation( shaderID, "material.specularIntensity" );
+    uniformSpecularPower     = glGetUniformLocation( shaderID, "material.specularPower" );
+
+    /*uniformPointLightCount = glGetUniformLocation( shaderID, "pointLightCount" );
     uniformSpotLightCount  = glGetUniformLocation( shaderID, "spotLightCount" );
 
     for ( int i = 0; i < MAX_POINT_LIGHTS; i++ )
@@ -197,7 +208,7 @@ void shader::clearShader()
     uniformProjection = 0;
 }
 
-void shader::setDirectionalLight(light_space::light *dLight)
+void shader::setDirectionalLight(light *dLight)
 {
     dLight->useDirectionalLight( uniformDirectionalLight.uniformAmbientIntensity,
                                  uniformDirectionalLight.uniformColour,
@@ -205,7 +216,7 @@ void shader::setDirectionalLight(light_space::light *dLight)
                                  uniformDirectionalLight.uniformDirection );
 }
 
-void shader::setPointLights(light_space::light *pLight, unsigned int lightCount)
+void shader::setPointLights(light *pLight, unsigned int lightCount)
 {
     if( lightCount > MAX_POINT_LIGHTS ) lightCount = MAX_POINT_LIGHTS;
 
@@ -220,7 +231,7 @@ void shader::setPointLights(light_space::light *pLight, unsigned int lightCount)
        }
 }
 
-void shader::setSpotLights(light_space::light *sLight, unsigned int lightCount)
+void shader::setSpotLights( light *sLight, unsigned int lightCount)
 {
     if( lightCount > MAX_SPOT_LIGHTS ) lightCount = MAX_SPOT_LIGHTS;
 
@@ -234,6 +245,19 @@ void shader::setSpotLights(light_space::light *sLight, unsigned int lightCount)
                                     uniformSpotLight[i].uniformLinear, uniformSpotLight[i].uniformExponent,
                                     uniformSpotLight[i].uniformEdge );
         }
+}
+
+void shader::setRayMarchingParams(float minHitDist, float maxTraceDist, int stepNumber)
+{
+    glUniform1i( uniformStepNumber, stepNumber );
+    glUniform1f( uniformMinHitDist, minHitDist );
+    glUniform1f( uniformMaxTraceDist, maxTraceDist );
+}
+
+void shader::setBoundingBoxSize(glm::vec3 minSize, glm::vec3 maxSize)
+{
+    glUniform3f( uniformAABBmin, minSize.x, minSize.y, minSize.z );
+    glUniform3f( uniformAABBmax, maxSize.x, maxSize.y, maxSize.z );
 }
 
 void hfrep3D::shader::Validate()

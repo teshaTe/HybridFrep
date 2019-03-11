@@ -6,7 +6,7 @@
 #include <string.h>
 #include <GL/glew.h>
 
-#include "include/stb_image.h"
+#include "stb_image.h"
 
 namespace hfrep3D {
 

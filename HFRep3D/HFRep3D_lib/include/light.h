@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-namespace light_space {
+namespace hfrep3D {
 
 class light
 {
@@ -12,24 +12,19 @@ public:
     light() {}
     ~light() {}
 
-    void setDirectionalLight( GLfloat red, GLfloat green, GLfloat blue,
-                              GLfloat aIntensity, GLfloat dIntensity,
-                              GLfloat xDir, GLfloat yDir, GLfloat zDir );
+    void setDirectionalLight(glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity, glm::vec3 Direction);
     void useDirectionalLight( GLfloat ambientIntensityLocation, GLfloat ambientColourLocation,
                               GLfloat diffuseIntensityLocation, GLfloat directionLocation);
 
-    void setPointLight( GLfloat red, GLfloat green, GLfloat blue,
-                        GLfloat aIntensity, GLfloat dIntensity,
-                        GLfloat xPos, GLfloat yPos, GLfloat zPos,
+    void setPointLight(glm::vec3 col,
+                        GLfloat aIntensity, GLfloat dIntensity, glm::vec3 position,
                         GLfloat con, GLfloat lin, GLfloat exp);
     void usePointLight(GLuint ambientIntensityLocation, GLuint ambientColourLocation,
                        GLuint diffuseIntensityLocation, GLuint positionLocation,
                        GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation);
 
-    void setSpotLight(GLfloat red, GLfloat green, GLfloat blue,
-                      GLfloat aIntensity, GLfloat dIntensity,
-                      GLfloat xPos, GLfloat yPos, GLfloat zPos,
-                      GLfloat xDir, GLfloat yDir, GLfloat zDir,
+    void setSpotLight(glm::vec3 col,
+                      GLfloat aIntensity, GLfloat dIntensity, glm::vec3 position, glm::vec3 direction,
                       GLfloat con, GLfloat lin, GLfloat exp, GLfloat edg);
     void useSpotLight(GLuint ambientIntensityLocation, GLuint ambientColourLocation,
                       GLuint diffuseIntensityLocation, GLuint positionLocation, GLuint directionLocation,

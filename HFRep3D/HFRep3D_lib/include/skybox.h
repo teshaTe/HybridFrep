@@ -10,14 +10,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "include/shader.h"
-#include "include/mesh.h"
+#include "shader.h"
+#include "mesh.h"
 
 namespace hfrep3D {
 
 class SkyBox{
 public:
-    SkyBox( std::vector<std::string> faceLocations );
+    SkyBox(std::vector<std::string> faceLocations, float resX, float resY, float resZ );
     ~SkyBox() { }
 
     void DrawSkybox( glm::mat4 viewMatrix, glm::mat4 projectionMatrix );

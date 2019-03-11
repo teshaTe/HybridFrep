@@ -5,7 +5,7 @@
 
 namespace hfrep3D {
 
-SkyBox::SkyBox(std::vector<std::string> faceLocations)
+SkyBox::SkyBox(std::vector<std::string> faceLocations, float resX, float resY, float resZ)
 {
     skyShader = std::make_shared<shader>();
     std::string fShader = "shaders/FragSkyBoxShader.frag";
@@ -63,25 +63,26 @@ SkyBox::SkyBox(std::vector<std::string> faceLocations)
             3, 6, 7
         };
 
+    float x = resX, y = resY, z = resZ;
     float skyboxVertices[] = {
-            -200.0f,  200.0f, -200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
-            -200.0f, -200.0f, -200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
-             200.0f,  200.0f, -200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
-             200.0f, -200.0f, -200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
+            -x,  y, -z,   0.0f, 0.0f, 0.0f,
+            -x, -y, -z,   0.0f, 0.0f, 0.0f,
+             x,  y, -z,   0.0f, 0.0f, 0.0f,
+             x, -y, -z,   0.0f, 0.0f, 0.0f,
 
-            -200.0f,  200.0f, 200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
-             200.0f,  200.0f, 200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
-            -200.0f, -200.0f, 200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
-             200.0f, -200.0f, 200.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f
+            -x,  y,  z,   0.0f, 0.0f, 0.0f,
+             x,  y,  z,   0.0f, 0.0f, 0.0f,
+            -x, -y,  z,   0.0f, 0.0f, 0.0f,
+             x, -y,  z,   0.0f, 0.0f, 0.0f
         };
 
     skyMesh = std::make_shared<mesh>();
-    skyMesh.get()->CreateMesh( skyboxVertices, skyboxIndices, 64, 36 );
+    skyMesh.get()->CreateMesh( skyboxVertices, skyboxIndices, 48, 36 );
 }
 
 void SkyBox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-    viewMatrix = glm::mat4( glm::mat3( viewMatrix ) );
+    viewMatrix = glm::mat4(glm::mat3(viewMatrix));
     glDepthMask( GL_FALSE );
 
     skyShader.get()->useShader();

@@ -16,7 +16,7 @@ struct Point3D
 
 class FRepObj3D {
 public:
-    FRepObj3D(int resX, int resY, int resZ, int scaleF);
+    FRepObj3D(int resX, int resY, int resZ, float scaleF);
     ~FRepObj3D(){}
 
     float sphere(Point3D pos, Point3D center, float R );
@@ -40,8 +40,8 @@ private:
 
     std::vector<float> frep;
 
-    inline float convertToUV( float val ) { return val / resolutionX; }
-    inline Point3D convertToUV( Point3D val ) { return Point3D( val.dx/resolutionX, val.dy/resolutionY, val.dz/resolutionZ ); }
+    inline float convertToSTR( float val ) { return val / resolutionX; }
+    inline Point3D convertToSTR( Point3D val ) { return Point3D( val.dx/resolutionX, val.dy/resolutionY, val.dz/resolutionZ ); }
 
 };
 

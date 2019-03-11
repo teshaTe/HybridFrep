@@ -1,5 +1,9 @@
 #include <include/hfrep3D.h>
 
+#include <cmath>
+#include <iostream>
+
+
 namespace hfrep3D {
 
 HFRep3D::HFRep3D(int gridW, int gridH, int gridD)
@@ -9,8 +13,7 @@ HFRep3D::HFRep3D(int gridW, int gridH, int gridD)
     voxGrD = gridD;
 
     DT3D          = std::make_shared<distance_transform_3D::distanceTransform3D>( gridW, gridH, gridD );
-    DT3D_custom   = std::make_shared<distance_transform_3D::distanceTransform3D>( gridW, gridH, gridD );
-    interpolField = std::make_shared<interpolation_3d::interpolation>( gridW, gridH, gridD );
+    interpolField = std::make_shared<interpolation::interpolate>( gridW, gridH, gridD );
 }
 
 void HFRep3D::calculateHFRep3D( std::vector<float> *frep3D, int stepFunc, float slope, bool checkRep )
@@ -25,7 +28,7 @@ void HFRep3D::calculateHFRep3D( std::vector<float> *frep3D, int stepFunc, float 
     DDT  = DT3D.get()->getDDT();
     SDDT = DT3D.get()->getSignedDDT();
 
-    interpolField.get()->interpolateField( &DDT, TRILINEAR );
+    interpolField.get()->interpolateField( &DDT, TRICUBIC );
     SmoothDDT = interpolField.get()->getField();
     generateHFRepObject( stepFunc, slope );
 
@@ -73,7 +76,7 @@ void HFRep3D::generateHFRepObject(int stepFunction, float slope )
             for ( int x = 0; x < voxGrW; x++)
             {
                 int i  = index( x, y, z );
-                float val = getStepFunVal( FRepObj[i], stepFunction, slope ) * DDT[i]; //TODO: change back to smoothDDT after smoothing is implemented
+                float val = getStepFunVal( FRepObj[i], stepFunction, slope ) * SmoothDDT[i]; //TODO: change back to smoothDDT after smoothing is implemented
                 HFRepObj.push_back( val );
             }
         }

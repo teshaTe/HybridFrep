@@ -7,7 +7,7 @@
 
 #include <GL/glew.h>
 
-#include "include/light.h"
+#include "light.h"
 
 namespace hfrep3D {
 
@@ -30,12 +30,12 @@ public:
 
     inline void useShader() { glUseProgram( shaderID ); }
 
-    void setDirectionalLight( light_space::light* dLight );
-    void setPointLights( light_space::light* pLight, unsigned int lightCount );
-    void setSpotLights( light_space::light* sLight, unsigned int lightCount );
+    void setDirectionalLight( light* dLight );
+    void setPointLights( light* pLight, unsigned int lightCount );
+    void setSpotLights( light* sLight, unsigned int lightCount );
 
-    void setRayMarchingParams( int totalSteps, float stopThreshold, float gradientStep,
-                               float clipFarPlane, float maxDist, float minDist );
+    void setRayMarchingParams( float minHitDist, float maxTraceDist, int stepNumber );
+    void setBoundingBoxSize(glm::vec3 minSize, glm::vec3 maxSize );
 
     inline GLuint getProjectionLocation()       { return uniformProjection; }
     inline GLuint getModelLocation()            { return uniformModel; }
@@ -47,23 +47,28 @@ public:
     inline GLuint getEyePositionLocation()      { return uniformEyePosition; }
     inline GLuint getSpecularIntesityLocation() { return uniformSpecularIntensity; }
     inline GLuint getSpecularPowerLocation()    { return uniformSpecularPower; }
+    inline GLuint getSampler3DLocation()        { return uniformSampler3D; }
+    inline GLuint getFresnelCoeffLocation()     { return uniformFresnelCoeff; }
+    inline GLuint getHFRepMinMaxLocation()      { return uniformHFRepMinMax; }
 
 private:
     int pointLightCount, spotLightCount;
 
+    //setting basic parameters for holding the shader
     GLuint shaderID, uniformProjection, uniformModel,
-           uniformView, uniformEyePosition;
-    GLuint uniformSpecularIntensity, uniformSpecularPower;
+           uniformView, uniformEyePosition, uniformSampler3D, uniformHFRepMinMax;
 
-    GLint uniformNumberOfSteps;
-    GLint uniformSampler3D;
+    //setting basic params for holding the light simple based on Phong Model
+    GLuint uniformSpecularIntensity, uniformSpecularPower, uniformFresnelCoeff;
 
-    GLfloat uniformStopThres;
-    GLfloat uniformGradStep;
-    GLfloat uniformClipFar;
-    GLfloat uniformMaxTraceDist;
-    GLfloat uniformMinHitDist;
+    //setting up parameters for holding sphere-tracing
+    GLuint uniformGradStep, uniformMinHitDist,
+           uniformMaxTraceDist, uniformStepNumber;
 
+    //setting up bounding box parameters
+    GLuint uniformAABBmin, uniformAABBmax;
+
+    //*****************Setting up addiitonal light params (point/spot lights)*****************
     struct {
         GLuint uniformColour;
         GLuint uniformAmbientIntensity;
@@ -100,6 +105,8 @@ private:
         GLuint uniformDirection;
         GLuint uniformEdge;
     } uniformSpotLight[MAX_SPOT_LIGHTS];
+
+    //****************************************************************************
 
     void compileShader( const char* vertexCode, const char* fragmentCode );
     void addShader( GLuint TheProgram, const char* ShaderCode, GLenum ShaderType );

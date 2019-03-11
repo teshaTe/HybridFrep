@@ -1,13 +1,11 @@
 #ifndef H_FREP_CLASS
 #define H_FREP_CLASS
 
-#include <iostream>
 #include <vector>
-#include <cmath>
 #include <memory>
 
-#include "include/ddt3D.h"
-#include "include/interpolation.h"
+#include "ddt3D.h"
+#include "interpolation.h"
 
 namespace hfrep3D {
 
@@ -39,8 +37,8 @@ private:
     std::vector<float> HFRepObj;
     std::vector<float> DDT, SDDT, SmoothDDT;
 
-    std::shared_ptr<distance_transform_3D::distanceTransform3D> DT3D, DT3D_custom;
-    std::shared_ptr<interpolation_3d::interpolation> interpolField;
+    std::shared_ptr<distance_transform_3D::distanceTransform3D> DT3D;
+    std::shared_ptr<interpolation::interpolate> interpolField;
 
     float getStepFunVal(float frep_val, int function, float slope);
     void  generateHFRepObject( int stepFunction, float slope );

@@ -1,19 +1,18 @@
 #ifndef H_INTERPOLATION_CLASS
 #define H_INTERPOLATION_CLASS
 
-#include <iostream>
 #include <vector>
 
-namespace interpolation_3d {
+namespace interpolation {
 
-#define TRILINEAR 0
-#define TRICUBIC  1
+#define BICUBIC  1
+#define TRICUBIC 2
 
-class interpolation
+class interpolate
 {
 public:
-    interpolation( int gridW, int gridH, int gridD );
-    ~interpolation() { }
+    interpolate( int gridW, int gridH, int gridD );
+    ~interpolate() { }
 
     void interpolateField( std::vector<float> *inField, int interType );
 
@@ -24,13 +23,15 @@ private:
 
     std::vector<float> finField;
 
-    void interpolateTrilinear( std::vector<float> *field );
-    void interpolateTricubic( std::vector<float> *field );
+    float interpolateCubic(float point[] , float x);
+    float interpolateBicubic(std::vector<float> *field , int x, int y);
+    float interpolateTricubic(std::vector<float> *field , int x, int y, int z);
 
-    inline int index( int x, int y, int z ) { return z*voxGrW*voxGrH + y*voxGrW + x; }
+    inline int index2d( int x, int y ) { return x + y*voxGrW; }
+    inline int index3d( int x, int y, int z ) { return z*voxGrW*voxGrH + y*voxGrW + x; }
     inline int clipWithBounds( int n, int n_min, int n_max ) { return n > n_max ? n_max :( n < n_min ? n_min : n ); }
 
 };
 
-} //namespace myMesh
+} //namespace interpolation
 #endif
