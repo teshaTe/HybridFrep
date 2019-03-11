@@ -13,6 +13,10 @@ volumeOBJ::volumeOBJ()
     textureFieldID = 0;
     volMesh   = std::make_shared<mesh>();
     volShader = std::make_shared<shader>();
+
+    std::string fShader = "shaders/FragHFRepShader.frag";
+    std::string vShader = "shaders/VertHFRepShader.vert";
+    volShader.get()->createFromFiles( vShader.c_str(), fShader.c_str() );
 }
 
 volumeOBJ::~volumeOBJ()
@@ -34,10 +38,6 @@ void volumeOBJ::checkError(int number)
 
 void volumeOBJ::createVolumetricObj( std::vector<float> field, float width, float height, float depth )
 {
-    std::string fShader = "shaders/FragHFRepShader.frag";
-    std::string vShader = "shaders/VertHFRepShader.vert";
-    volShader.get()->createFromFiles( vShader.c_str(), fShader.c_str() );
-
     uniformModel       = volShader.get()->getModelLocation();
     uniformView        = volShader.get()->getViewLocation();
     uniformProjection  = volShader.get()->getProjectionLocation();
@@ -107,7 +107,7 @@ void volumeOBJ::createVolumetricObj( std::vector<float> field, float width, floa
     volMesh.get()->CreateMesh( volumeVertices, volumeIndices, 48, 36 );
 }
 
-void volumeOBJ::renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos )
+void volumeOBJ::renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos, light *dirLight)
 {
     glm::mat4 model = glm::mat4(1);
 
@@ -125,7 +125,9 @@ void volumeOBJ::renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMa
     volShader.get()->setRayMarchingParams( minHitD, maxTraceD, stepNum );
     volShader.get()->setBoundingBoxSize( glm::vec3( -aabb_w, -aabb_h, -aabb_d ), glm::vec3( aabb_w, aabb_h, aabb_d ) );
 
+    //volShader.get()->setDirectionalLight( dirLight );
     volShader->Validate();
+
     volMesh.get()->RenderMesh();
 }
 

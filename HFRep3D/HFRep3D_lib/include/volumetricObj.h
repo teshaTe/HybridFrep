@@ -10,6 +10,8 @@
 
 #include "mesh.h"
 #include "shader.h"
+#include "light.h"
+#include "material.h"
 
 namespace hfrep3D {
 
@@ -24,16 +26,19 @@ public:
     inline void setBoundingBox( float width, float height, float depth )
                                 { aabb_w = width; aabb_h = height; aabb_d = depth; }
 
+    inline void useDirectionalLight( light *dirLight ) { volShader.get()->setDirectionalLight( dirLight ); }
+    inline void useMaterial( material *mat ) { mat->useSimpleMaterial( volShader.get()->getSpecularIntesityLocation(),
+                                                                       volShader.get()->getSpecularPowerLocation(),
+                                                                       volShader.get()->getFresnelCoeffLocation()); }
+
     void createVolumetricObj(std::vector<float> field, float width, float height, float depth );
-    void renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMatrix , glm::vec3 cameraPos);
+    void renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMatrix , glm::vec3 cameraPos, light *dirLight);
     void clearVolumetricObj();
 
     void genGradientNormals(std::vector<float> *field, float gradSt, int width, int height, int depth );
     void useGradientNormals();
 
     void sliceVolumetricObj();
-
-    std::shared_ptr<shader> volShader;
 
 private:
     GLuint uniformProjection, uniformView, uniformEyePosition,
@@ -47,7 +52,8 @@ private:
 
     float aabb_w, aabb_h, aabb_d;
 
-    std::shared_ptr<mesh> volMesh;
+    std::shared_ptr<mesh>   volMesh;
+    std::shared_ptr<shader> volShader;
 
     void checkError(int number);
 };

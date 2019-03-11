@@ -56,7 +56,13 @@ bool GLFW_window::window::initialise()
     glfwMakeContextCurrent( mainWindow );
 
     createCallbacks();
+
+#ifdef USE_DEBUG_MODE
     glfwSetInputMode( mainWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL );
+#else
+    glfwSetInputMode( mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED );
+#endif
+
     glewExperimental = GL_TRUE;
 
     GLenum error = glewInit();

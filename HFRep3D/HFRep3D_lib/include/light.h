@@ -12,24 +12,22 @@ public:
     light() {}
     ~light() {}
 
-    void setDirectionalLight(glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity, glm::vec3 Direction);
-    void useDirectionalLight( GLfloat ambientIntensityLocation, GLfloat ambientColourLocation,
-                              GLfloat diffuseIntensityLocation, GLfloat directionLocation);
+    void setDirectionalLight( glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity, glm::vec3 Direction);
+    void useDirectionalLight( GLuint ambientIntensityLocation, GLuint ambientColourLocation,
+                              GLuint diffuseIntensityLocation, GLuint directionLocation );
 
-    void setPointLight(glm::vec3 col,
-                        GLfloat aIntensity, GLfloat dIntensity, glm::vec3 position,
-                        GLfloat con, GLfloat lin, GLfloat exp);
-    void usePointLight(GLuint ambientIntensityLocation, GLuint ambientColourLocation,
-                       GLuint diffuseIntensityLocation, GLuint positionLocation,
-                       GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation);
+    void setPointLight( glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity, glm::vec3 position,
+                        GLfloat con, GLfloat lin, GLfloat exp );
+    void usePointLight( GLuint ambientIntensityLocation, GLuint ambientColourLocation,
+                        GLuint diffuseIntensityLocation, GLuint positionLocation,
+                        GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation );
 
-    void setSpotLight(glm::vec3 col,
-                      GLfloat aIntensity, GLfloat dIntensity, glm::vec3 position, glm::vec3 direction,
-                      GLfloat con, GLfloat lin, GLfloat exp, GLfloat edg);
-    void useSpotLight(GLuint ambientIntensityLocation, GLuint ambientColourLocation,
-                      GLuint diffuseIntensityLocation, GLuint positionLocation, GLuint directionLocation,
-                      GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation,
-                      GLuint edgeLocation);
+    void setSpotLight( glm::vec3 col, GLfloat aIntensity, GLfloat dIntensity, glm::vec3 position, glm::vec3 direction,
+                       GLfloat con, GLfloat lin, GLfloat exp, GLfloat edg );
+    void useSpotLight( GLuint ambientIntensityLocation, GLuint ambientColourLocation,
+                       GLuint diffuseIntensityLocation, GLuint positionLocation, GLuint directionLocation,
+                       GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation,
+                       GLuint edgeLocation );
 
 private:
     glm::vec3 colour;

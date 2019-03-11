@@ -10,8 +10,8 @@ void light::setDirectionalLight(glm::vec3 col, GLfloat aIntensity, GLfloat dInte
     directionDLight  = direction;
 }
 
-void light::useDirectionalLight(GLfloat ambientIntensityLocation, GLfloat ambientColourLocation,
-                                GLfloat diffuseIntensityLocation, GLfloat directionLocation)
+void light::useDirectionalLight( GLuint ambientIntensityLocation, GLuint ambientColourLocation,
+                                 GLuint diffuseIntensityLocation, GLuint directionLocation )
 {
     glUniform3f( ambientColourLocation, colour.x, colour.y, colour.z );
     glUniform1f( ambientIntensityLocation, ambientIntensity );
