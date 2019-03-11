@@ -12,12 +12,9 @@
 
 #include "window.h"
 #include "camera.h"
-#include "light.h"
-#include "material.h"
 #include "volumetricObj.h"
 #include "frep3D.h"
 #include "skybox.h"
-#include "shader.h"
 #include "hfrep3D.h"
 
 using namespace std::placeholders;
@@ -105,7 +102,7 @@ int main( int argc, char** argv )
     //setting up light
     std::cout << "stage4: Setting up Light & material props.:";
     hfrep3D::light light;
-    light.setDirectionalLight( glm::vec3(1.0, 1.0, 1.0), 0.3f, 0.5f, glm::vec3(0.0, 1.0, 2.0));
+    light.setDirectionalLight( glm::vec3(1.0, 1.0, 1.0), 0.3f, 0.5f, glm::vec3(0.0, -5.0, 2.0));
     hfrep3D::material material0;
     material0.setSimpleMaterial(4.0f, 256.0f, 0.8f);
     if( mainWindow.checkError(2) )
@@ -141,11 +138,10 @@ int main( int argc, char** argv )
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
         skybox.DrawSkybox( finViewMatrix, projection );
-        material0.useSimpleMaterial( obj1.volShader.get()->getSpecularIntesityLocation(),
-                                     obj1.volShader.get()->getSpecularPowerLocation(),
-                                     obj1.volShader.get()->getFresnelCoeffLocation() );
-        obj1.volShader.get()->setDirectionalLight( &light );
-        obj1.renderVolumetricObj( finViewMatrix, projection, newCamera.getCameraPosition() );
+
+        obj1.renderVolumetricObj( finViewMatrix, projection, newCamera.getCameraPosition(), &light );
+        obj1.useDirectionalLight( &light );
+        obj1.useMaterial( &material0 );
 
         glUseProgram( 0 );
         mainWindow.swapBuffers();

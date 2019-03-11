@@ -46,6 +46,14 @@ uniform sampler3D HFRepField;
 float gradStep = 0.001;
 float normCoeff = 10.0;
 
+float TextureCoordsToWorld( float value )
+{
+    float size   = AABB_max.x - AABB_min.x;
+    float world  = value * size + AABB_min.x;
+    return world;
+
+}
+
 vec3 worldToTextureCoords( vec3 pos )
 {
     vec3 size   = AABB_max - AABB_min;
@@ -56,11 +64,12 @@ vec3 worldToTextureCoords( vec3 pos )
 vec3 obtainNormal( vec3 uvwPos )
 {
     vec3 shift = vec3( gradStep, 0.0, 0.0 );
+    shift = worldToTextureCoords( shift );
 
     float x = texture( HFRepField, uvwPos + shift.xyy ).r - texture( HFRepField, uvwPos - shift.xyy ).r;
     float y = texture( HFRepField, uvwPos + shift.yxy ).r - texture( HFRepField, uvwPos - shift.yxy ).r;
     float z = texture( HFRepField, uvwPos + shift.yyx ).r - texture( HFRepField, uvwPos - shift.yyx ).r;
-    return normalize( vec3( x, y, z )/normCoeff );
+    return normalize( vec3( x, y, z ) );
 }
 
 float fresnelReflection( vec3 normal, vec3 lightPos )
@@ -69,19 +78,19 @@ float fresnelReflection( vec3 normal, vec3 lightPos )
            pow( clamp( 1.0 - dot( normal, lightPos ), 0.0, 1.0 ), 5.0 );
 }
 
-vec4 calcLightByDirection( light baseLight, vec3 direction, vec3 Normal, vec3 objPos, vec3 eyePos )
+vec4 calcLightByDirection( light baseLight, vec3 direction, vec3 normal, vec3 objPos, vec3 eyePos )
 {
     vec4 ambientColour  = vec4( baseLight.colour, 1.0f ) * baseLight.ambientIntensity;
 
     //max function checking whether we have angle below zero and if yes, clamp it to 0
-    float diffuseFactor = max( dot( Normal, normalize( direction ) ), 0.0f);
+    float diffuseFactor = max( dot( normal, normalize( direction ) ), 0.0f);
     vec4  diffuseColour = vec4( baseLight.colour * baseLight.diffuseIntensity * diffuseFactor, 1.0f );
 
     vec4 specularColour = vec4( 0, 0, 0, 0 );
     if( diffuseFactor > 0.0f )
     {
         vec3 fragToEye       = normalize( eyePos - objPos );
-        vec3 reflectedVertex = normalize( reflect( direction, Normal ));
+        vec3 reflectedVertex = normalize( reflect( direction, normal ));
         float specularFactor = dot( fragToEye, reflectedVertex );
 
         if( specularFactor > 0.0f )
@@ -99,7 +108,7 @@ vec4 calcDirectionalLight( vec3 normal, vec3 objPos, vec3 eyePos )
     return calcLightByDirection( directionalLight.base, directionalLight.direction, normal, objPos, eyePos );
 }
 
-bool RayMarching_CheckHit( vec3 rayOrigPos, vec3 rayDir, out vec3 Normal, out float depth)
+bool RayMarching_CheckHit( vec3 rayOrigPos, vec3 rayDir, out vec3 normal, out float depth)
 {
     float totalDistTravelled = 0.0f;
     float minDistTravelled   = 0.0f;
@@ -108,11 +117,11 @@ bool RayMarching_CheckHit( vec3 rayOrigPos, vec3 rayDir, out vec3 Normal, out fl
     for( int i = 0; i < rayMarching.numberOfSteps; i++ )
     {
         vec3 curPos = rayOrigPos + totalDistTravelled * rayDir;
-        distToClosestPoint = texture( HFRepField, curPos ).r/normCoeff;
+        distToClosestPoint = texture( HFRepField, curPos ).r / normCoeff;
 
         if( distToClosestPoint > rayMarching.minHitDist )
         {
-            Normal = obtainNormal( curPos );
+            normal = obtainNormal( curPos );
             depth  = totalDistTravelled;
             return true;
         }
@@ -148,7 +157,7 @@ void main()
 {
     vec3 cameraViewDir = normalize( FragPos - eyePosition );
     vec2 T;
-    vec3 Normal;
+    vec3 normal;
     float depth;
 
     if( intersect_vs_aabb( eyePosition, cameraViewDir, AABB_min, AABB_max, T ) )
@@ -157,11 +166,11 @@ void main()
         vec3 exit_pos  = eyePosition + T.y * cameraViewDir;
         vec3 viewDir   = normalize( worldToTextureCoords(exit_pos) - worldToTextureCoords(enter_pos) );
 
-        if( RayMarching_CheckHit( worldToTextureCoords(enter_pos), viewDir, Normal, depth ) )
+        if( RayMarching_CheckHit( worldToTextureCoords(enter_pos), viewDir, normal, depth ) )
         {
-            vec3 objPos   = enter_pos + depth * ( exit_pos - enter_pos );
-            vec4 dirLight = calcDirectionalLight( Normal, objPos, enter_pos );
-            colour = vec4(0.5, 0.0, 0.0, 1.0) * dirLight;
+            vec3 objPos   = enter_pos + depth * normCoeff * normalize( exit_pos - enter_pos );
+            vec4 dirLight = calcDirectionalLight( normal, objPos, enter_pos );
+            colour = vec4(1.0, 0.0, 0.0, 1.0) * dirLight;
         }
         else
             discard;
