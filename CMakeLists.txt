@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS " -pthread ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -O3")
 
@@ -24,9 +24,14 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/OpenCV_lib/include")
 link_directories("${CMAKE_CURRENT_SOURCE_DIR}/OpenCV_lib/lib")
 
 #################################_SET_OPTIONS_#################################
-option(USE_OPENMP              "Use it for speeding up calc of DDT in 3D"       OFF)
+option(USE_OPENMP     "Use it for speeding up calc of DT in 3D"       OFF)
+option(USE_DEBUG_MODE "To unbind the cursor while running the sample" OFF)
 
 #################################_DEFINE_OPTIONS_PROPS_###################################
+
+if(USE_DEBUG_MODE)
+    add_definitions( -DUSE_DEBUG_MODE )
+endif()
 
 if(USE_OPENMP)
     add_definitions( -DUSE_OPENMP)
