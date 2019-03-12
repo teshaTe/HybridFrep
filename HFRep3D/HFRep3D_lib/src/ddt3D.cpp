@@ -94,7 +94,10 @@ void distanceTransform3D::traverseVoxelGridForwardPass(std::vector<Point3D> &gri
                 fillVoxGridElement( grid, point, indBxFyz );
             }
         }
+    }
 
+    for ( int z = 0; z < voxGrD; z++ )
+    {
         for ( int y = voxGrH-1; y >= 0; y-- )
         {
             for ( int x =  voxGrW-1; x >= 0; x-- )
@@ -102,8 +105,8 @@ void distanceTransform3D::traverseVoxelGridForwardPass(std::vector<Point3D> &gri
                 //F - forward mask shifting + x,y,z - allong which axe
                 int indByFxz  = index( x, y, z );
                 Point3D point = getVoxGridElement( grid, indByFxz );
-                compareVoxelVectors( grid, point, 1, 0, 0, x, y, z );
                 compareVoxelVectors( grid, point, 0, 1, 0, x, y, z );
+                compareVoxelVectors( grid, point, 1, 0, 0, x, y, z );
                 fillVoxGridElement( grid, point, indByFxz );
             }
 
@@ -137,7 +140,7 @@ void distanceTransform3D::traverseVoxelGridBackwardPass(std::vector<Point3D> &gr
                 fillVoxGridElement( grid, point, indBxyz );
             }
 
-            for ( int x = 0; x > voxGrW; x++)
+            for ( int x = 0; x < voxGrW; x++)
             {
                 //F - forward mask shifting, B - backward mask shifting + x,y,z - allong which axe
                 int indByzFx  = index(x, y, z);
@@ -147,7 +150,10 @@ void distanceTransform3D::traverseVoxelGridBackwardPass(std::vector<Point3D> &gr
                 fillVoxGridElement( grid, point, indByzFx );
             }
         }
+    }
 
+    for ( int z = voxGrD-1; z >= 0; z-- )
+    {
         for ( int y = 0; y < voxGrH; y++ )
         {
             for ( int x = 0; x < voxGrW; x++ )
@@ -184,7 +190,7 @@ void distanceTransform3D::mergeVoxGrids()
                 int ind     = index(x,y,z);
                 float dist1 = std::sqrt( getVoxGridElement( vGrid1, ind ).EuclideanDist() );
                 float dist2 = std::sqrt( getVoxGridElement( vGrid2, ind ).EuclideanDist() );
-                float dist  = (dist1 - dist2)*10.0f/INF;
+                float dist  = (dist2 - dist1)*10.0f/INF;
                 DDT3D[ind]  = std::abs( dist );
                 SDDT3D[ind] = dist;
             }
