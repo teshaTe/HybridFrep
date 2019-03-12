@@ -63,16 +63,14 @@ int main( int argc, char** argv )
     mainWindow.initialise();
 
     int stepFunc = HYPERBOLIC_SIGMOID;
-    int resX = 128, resY = 128, resZ = 128;
+    int resX = 256, resY = 256, resZ = 256;
     frep3D::Point3D cen( resX/2.0f, resY/2.0f, resZ/2.0f );
 
     //setting up FRep object
     std::cout << "stage0: computing FRep:";
-    frep3D::FRepObj3D FRep( resX, resY, resZ, 1.0f );
-    std::vector<float> frepSp = FRep.getFRep3D( cen, 40.0f,
-                                                std::bind(&frep3D::FRepObj3D::sphere, FRep, _1, _2, _3));
-    //std::vector<float> frepH = FRep.getFRep3D( frep3D::Point3D( 80.0f, 80.0f, 80.0f ),
-    //                                            std::bind(&frep3D::FRepObj3D::heart3D, FRep, _1, _2 ));
+    frep3D::FRepObj3D FRep( resX, resY, resZ, 4.0f );
+    std::vector<float> frepSp = FRep.getFRep3D( cen, 40.0f, std::bind(&frep3D::FRepObj3D::sphere, FRep, _1, _2, _3));
+    //std::vector<float> frepH = FRep.getFRep3D( cen, std::bind(&frep3D::FRepObj3D::heart3D, FRep, _1, _2 ));
     std::cout << " Success" << std::endl;
 
     //computing HFRep object
@@ -85,7 +83,7 @@ int main( int argc, char** argv )
         std::cout << " Success" << std::endl;
 
     //assigning hfrep field to 3D texture
-    std::cout << "stage2: assigning HFRep to 3D texture:";
+    std::cout << "stage2a: assigning HFRep to 3D texture:";
     hfrep3D::volumeOBJ obj1;
     obj1.setBoundingBox( 1.0f, 1.0f, 1.0f );
     obj1.setRayMarchingParams( -0.0001f, 10.0f, 200 );
@@ -102,7 +100,7 @@ int main( int argc, char** argv )
     //setting up light
     std::cout << "stage4: Setting up Light & material props.:";
     hfrep3D::light light;
-    light.setDirectionalLight( glm::vec3(1.0, 1.0, 1.0), 0.3f, 0.5f, glm::vec3(0.0, -5.0, 2.0));
+    light.setDirectionalLight( glm::vec3(1.0, 1.0, 1.0), 0.3f, 0.5f, glm::vec3(0.0, 5.0, 10.0));
     hfrep3D::material material0;
     material0.setSimpleMaterial(4.0f, 256.0f, 0.8f);
     if( mainWindow.checkError(2) )
@@ -110,7 +108,7 @@ int main( int argc, char** argv )
 
     //setting up camera
     std::cout << "stage5: Setting up Camera:";
-    myCamera::camera newCamera( glm::vec3( 0.0f, 0.0f, 2.0f ),
+    myCamera::camera newCamera( glm::vec3( 0.0f, 0.0f, 5.0f ),
                                 glm::vec3( 0.0f, 1.0f, 0.0f ),
                                    -60.0f, 0.0f, 5.0f, 0.5f );
 
@@ -121,6 +119,7 @@ int main( int argc, char** argv )
         std::cout << " Success" << std::endl;
 
     GLfloat deltaTime = 0.0f, lastTime  = 0.0f;
+
 
     while( !mainWindow.getShouldClose() )
     {
@@ -140,6 +139,7 @@ int main( int argc, char** argv )
         skybox.DrawSkybox( finViewMatrix, projection );
 
         obj1.renderVolumetricObj( finViewMatrix, projection, newCamera.getCameraPosition(), &light );
+        //obj1.useGradientNormalsMap();
         obj1.useDirectionalLight( &light );
         obj1.useMaterial( &material0 );
 
