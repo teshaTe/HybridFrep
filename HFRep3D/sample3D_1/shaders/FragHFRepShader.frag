@@ -42,17 +42,10 @@ uniform DirectionalLight directionalLight;
 uniform Material material;
 
 uniform sampler3D HFRepField;
+uniform sampler3D normalMap;
 
-float gradStep = 0.001;
+float gradStep  = 0.05;
 float normCoeff = 10.0;
-
-float TextureCoordsToWorld( float value )
-{
-    float size   = AABB_max.x - AABB_min.x;
-    float world  = value * size + AABB_min.x;
-    return world;
-
-}
 
 vec3 worldToTextureCoords( vec3 pos )
 {
@@ -63,12 +56,13 @@ vec3 worldToTextureCoords( vec3 pos )
 
 vec3 obtainNormal( vec3 uvwPos )
 {
-    vec3 shift = vec3( gradStep, 0.0, 0.0 );
-    shift = worldToTextureCoords( shift );
+    vec3 shift   = vec3( gradStep, 0.0, 0.0 );
+    vec3 n_shift = vec3( worldToTextureCoords( shift ).x, 0.0, 0.0 );
 
-    float x = texture( HFRepField, uvwPos + shift.xyy ).r - texture( HFRepField, uvwPos - shift.xyy ).r;
-    float y = texture( HFRepField, uvwPos + shift.yxy ).r - texture( HFRepField, uvwPos - shift.yxy ).r;
-    float z = texture( HFRepField, uvwPos + shift.yyx ).r - texture( HFRepField, uvwPos - shift.yyx ).r;
+    float x = texture( HFRepField, uvwPos - n_shift.xyy ).r - texture( HFRepField, uvwPos + n_shift.xyy ).r;
+    float y = texture( HFRepField, uvwPos - n_shift.yxy ).r - texture( HFRepField, uvwPos + n_shift.yxy ).r;
+    float z = texture( HFRepField, uvwPos - n_shift.yyx ).r - texture( HFRepField, uvwPos + n_shift.yyx ).r;
+
     return normalize( vec3( x, y, z ) );
 }
 
@@ -165,10 +159,11 @@ void main()
         vec3 enter_pos = eyePosition + T.x * cameraViewDir;
         vec3 exit_pos  = eyePosition + T.y * cameraViewDir;
         vec3 viewDir   = normalize( worldToTextureCoords(exit_pos) - worldToTextureCoords(enter_pos) );
+        //vec3 viewDir = normalize( exit_pos - enter_pos );
 
         if( RayMarching_CheckHit( worldToTextureCoords(enter_pos), viewDir, normal, depth ) )
         {
-            vec3 objPos   = enter_pos + depth * normCoeff * normalize( exit_pos - enter_pos );
+            vec3 objPos   = enter_pos + depth * normalize( exit_pos - enter_pos );
             vec4 dirLight = calcDirectionalLight( normal, objPos, enter_pos );
             colour = vec4(1.0, 0.0, 0.0, 1.0) * dirLight;
         }
