@@ -84,8 +84,9 @@ void shader::compileShader(const char *vertexCode, const char *fragmentCode)
     uniformView        = glGetUniformLocation( shaderID, "view" );
     uniformEyePosition = glGetUniformLocation( shaderID, "eyePosition" );
     uniformModel       = glGetUniformLocation( shaderID, "model" );
-    uniformSampler3D   = glGetUniformLocation( shaderID, "HFRepField" );
-    uniformHFRepMinMax = glGetUniformLocation( shaderID, "HFRepMinMax" );
+    uniformHFRep3D     = glGetUniformLocation( shaderID, "HFRepField" );
+    uniformNormalMap   = glGetUniformLocation( shaderID, "normalMap" );
+
 
     //obtaining uniform variables for setting up Ray Marching (sphere tracing)
     uniformStepNumber   = glGetUniformLocation( shaderID, "rayMarching.numberOfSteps" );

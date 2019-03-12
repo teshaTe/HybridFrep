@@ -47,16 +47,16 @@ public:
     inline GLuint getEyePositionLocation()      { return uniformEyePosition; }
     inline GLuint getSpecularIntesityLocation() { return uniformSpecularIntensity; }
     inline GLuint getSpecularPowerLocation()    { return uniformSpecularPower; }
-    inline GLuint getSampler3DLocation()        { return uniformSampler3D; }
+    inline GLuint getHFRep3DLocation()          { return uniformHFRep3D; }
     inline GLuint getFresnelCoeffLocation()     { return uniformFresnelCoeff; }
-    inline GLuint getHFRepMinMaxLocation()      { return uniformHFRepMinMax; }
+    inline GLuint getNormalMapLocation()        { return uniformNormalMap; }
 
 private:
     int pointLightCount, spotLightCount;
 
     //setting basic parameters for holding the shader
     GLuint shaderID, uniformProjection, uniformModel,
-           uniformView, uniformEyePosition, uniformSampler3D, uniformHFRepMinMax;
+           uniformView, uniformEyePosition, uniformHFRep3D, uniformNormalMap;
 
     //setting basic params for holding the light simple based on Phong Model
     GLuint uniformSpecularIntensity, uniformSpecularPower, uniformFresnelCoeff;
