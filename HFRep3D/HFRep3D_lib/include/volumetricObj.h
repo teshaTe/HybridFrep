@@ -35,15 +35,12 @@ public:
     void renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMatrix , glm::vec3 cameraPos, light *dirLight);
     void clearVolumetricObj();
 
-    void genGradientNormals(std::vector<float> *field, float gradSt, int width, int height, int depth );
-    void useGradientNormals();
-
     void sliceVolumetricObj();
 
 private:
     GLuint uniformProjection, uniformView, uniformEyePosition,
-           uniformModel, uniformSampler3D, uniformHFRepMinMax;
-    GLuint textureFieldID;
+           uniformModel, uniformHFRep3D, uniformNormalMap;
+    GLuint textureFieldID, textureNormalMapID;
 
     float HFRepMin, HFRepMax;
 
@@ -56,6 +53,8 @@ private:
     std::shared_ptr<shader> volShader;
 
     void checkError(int number);
+    inline int clipWithBounds( int n, int n_min, int n_max ) { return n > n_max ? n_max :( n < n_min ? n_min : n ); }
+    inline int index3d( int x, int y, int z, int width, int height ) { return z*width*height + y*width + x; }
 };
 
 }//namespace volumetric_object

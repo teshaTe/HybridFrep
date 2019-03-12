@@ -42,12 +42,7 @@ void volumeOBJ::createVolumetricObj( std::vector<float> field, float width, floa
     uniformView        = volShader.get()->getViewLocation();
     uniformProjection  = volShader.get()->getProjectionLocation();
     uniformEyePosition = volShader.get()->getEyePositionLocation();
-    uniformSampler3D   = volShader.get()->getSampler3DLocation();
-    uniformHFRepMinMax = volShader.get()->getHFRepMinMaxLocation();
-
-    //auto [min, max] = std::minmax_element(std::begin(field), std::end(field));
-    //HFRepMin = *min;
-    //HFRepMax = *max;
+    uniformHFRep3D     = volShader.get()->getHFRep3DLocation();
 
     glGenTextures( 1, &textureFieldID );
     glBindTexture( GL_TEXTURE_3D, textureFieldID );
@@ -112,8 +107,7 @@ void volumeOBJ::renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMa
     glm::mat4 model = glm::mat4(1);
 
     volShader.get()->useShader();
-    glUniform1i( uniformSampler3D, 0 );
-    //glUniform2f( uniformHFRepMinMax, HFRepMin, HFRepMax );
+    glUniform1i( uniformHFRep3D, 0 );
     glUniform3f( uniformEyePosition, cameraPos.x, cameraPos.y, cameraPos.z );
     glUniformMatrix4fv( uniformProjection, 1, GL_FALSE, glm::value_ptr( projectionMatrix ) );
     glUniformMatrix4fv( uniformView,       1, GL_FALSE, glm::value_ptr( viewMatrix ) );
@@ -124,10 +118,7 @@ void volumeOBJ::renderVolumetricObj(glm::mat4 viewMatrix, glm::mat4 projectionMa
 
     volShader.get()->setRayMarchingParams( minHitD, maxTraceD, stepNum );
     volShader.get()->setBoundingBoxSize( glm::vec3( -aabb_w, -aabb_h, -aabb_d ), glm::vec3( aabb_w, aabb_h, aabb_d ) );
-
-    //volShader.get()->setDirectionalLight( dirLight );
     volShader->Validate();
-
     volMesh.get()->RenderMesh();
 }
 
@@ -135,12 +126,6 @@ void volumeOBJ::clearVolumetricObj()
 {
     glDeleteTextures( 1, &textureFieldID );
     textureFieldID = 0;
-}
-
-void volumeOBJ::genGradientNormals(std::vector<float> *field, float gradSt, int width, int height, int depth)
-{
-
-
 }
 
 void volumeOBJ::sliceVolumetricObj()
