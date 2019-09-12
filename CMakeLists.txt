@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.1)
 project(hybridFRep)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -14,14 +13,15 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -O3")
 
 #################################_SET_UP_ADDITIONAL_LIBS_#################################
 
-find_package(Threads REQUIRED)
-find_package(OpenMP REQUIRED)
+find_package( Threads )
+find_package( OpenCV )
+
+find_package( GLEW )
+find_package( glfw3 )
+find_package( OpenGL )
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep2D/HFRep2D_lib/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/include")
-
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/OpenCV_lib/include")
-link_directories("${CMAKE_CURRENT_SOURCE_DIR}/OpenCV_lib/lib")
 
 #################################_SET_OPTIONS_#################################
 option(USE_OPENMP     "Use it for speeding up calc of DT in 3D"       OFF)
@@ -34,6 +34,7 @@ if(USE_DEBUG_MODE)
 endif()
 
 if(USE_OPENMP)
+    find_package( OpenMP )
     add_definitions( -DUSE_OPENMP)
     set(CMAKE_CXX_FLAGS " -fopenmp ${CMAKE_CXX_FLAGS}")
 endif()
