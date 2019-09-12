@@ -7,7 +7,8 @@ set (SRC_HEADERS  include/ddt2D.h
                   include/hfrep2D.h
                   include/render2D.h
                   include/interpolation2D.h
-                  include/stb_image.h
+                  include/interpolation.h
+                  include/microstructures2D.h
     )
 
 set (SRC_SOURCE   src/ddt2D.cpp
@@ -15,6 +16,8 @@ set (SRC_SOURCE   src/ddt2D.cpp
                   src/hfrep2D.cpp
                   src/render2D.cpp
                   src/interpolation2D.cpp
+                  src/interpolation.cpp
+                  src/microstructures2D.cpp
     )
 
 add_library( hfrep2D_lib ${SRC_SOURCE} ${SRC_HEADERS} )

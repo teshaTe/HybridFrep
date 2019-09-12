@@ -20,7 +20,7 @@ HFRepObj2D::HFRepObj2D( int res_x, int res_y, int ddt_sh)
     modF = std::make_shared<ModifyField>();
 }
 
-void HFRepObj2D::calculateHFRep2D(std::vector<float> *frep, std::vector<float> *ddt, int stepfunc, float st_slope, bool checkHFRep)
+std::vector<float> HFRepObj2D::calculateHFRep2D(std::vector<float> *frep, std::vector<float> *ddt, int stepfunc, float st_slope, bool checkHFRep)
 {
     setNewRes( resolution_x+dist_sh, resolution_y+dist_sh );
     DDT.clear();
@@ -42,6 +42,8 @@ void HFRepObj2D::calculateHFRep2D(std::vector<float> *frep, std::vector<float> *
 
     if(checkHFRep)
         checkHFrep( &HFRep, frep, "initial check" );
+
+    return HFRep;
 }
 
 float HFRepObj2D::get_step_function_val( float frep_val, int function, float st_slope )

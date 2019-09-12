@@ -40,6 +40,7 @@ public:
     float get_bicubic_interpolated_val  ( const std::vector<float> *DT, Point2Di res, Point2Df indXY );
 
     std::vector<float> diff_fields(const std::vector<float> *field1, const std::vector<float> *field2 , float multi);
+    float calcAverageFieldError( const std::vector<float> *field1, const std::vector<float> *field2, float *inside, float *outside );
 
 private:
     float get_cubic_interpolated_val(const std::vector<float> *DT, Point2Di res, Point2Df indXY , float var, int shY);

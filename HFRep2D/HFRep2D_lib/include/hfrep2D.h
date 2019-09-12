@@ -20,10 +20,10 @@ class HFRepObj2D
 public:
     HFRepObj2D(int res_x, int res_y, int ddt_sh);
 
-    void calculateHFRep2D(std::vector<float> *frep, std::vector<float> *ddt, int stepfunc, float st_slope , bool checkHFRep);
+    std::vector<float> calculateHFRep2D(std::vector<float> *frep, std::vector<float> *ddt, int stepfunc, float st_slope , bool checkHFRep);
     void checkHFrep(std::vector<float> *hfrep , std::vector<float> *frep, std::string hfrep_check_name = "" );
+    float get_step_function_val(float frep_val, int function, float st_slope);
 
-    inline std::vector<float> getHFRepVec()    { return HFRep; }
     inline std::vector<float> getDDT()         { return DDT; }
     inline std::vector<float> getSignedDDT()   { return SDDT; }
     inline std::vector<float> getSmoothedDDT() { return SmDDT; }
@@ -33,8 +33,6 @@ public:
 private:
     std::shared_ptr<DiscreteDistanceTransform> DT;
     std::shared_ptr<ModifyField> modF;
-
-    float get_step_function_val(float frep_val, int function, float st_slope);
 
     void generateHFRepObject(std::vector<float> *FRep, int step_function, float st_slope);
 

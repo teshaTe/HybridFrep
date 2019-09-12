@@ -205,10 +205,36 @@ std::vector<float> ModifyField::diff_fields(const std::vector<float> *field1,
                                             const std::vector<float> *field2, float multi )
 {
     std::vector<float> result;
-    for(int i = 0; i < field1->size(); i++)
-         result.push_back( std::abs( std::abs(field1->at(i)) - field2->at(i) ) * multi); // multi = 10000.0
+    for(size_t i = 0; i < field1->size(); i++)
+         result.push_back( std::abs( std::abs(field1->at(i)) - std::abs(field2->at(i))) * multi); // multi = 10000.0
 
     return result;
+}
+
+float ModifyField::calcAverageFieldError(const std::vector<float> *field1, const std::vector<float> *field2, float *inside, float *outside)
+{
+    float averageError = 0.0, averageErrorIn = 0.0, averageErrorOut = 0.0;
+    int in = 0, out = 0;
+
+    for(size_t i = 0; i < field1->size(); i++)
+    {
+         averageError += std::abs( std::abs(field1->at(i)) - std::abs(field2->at(i)));
+         if( field1->at(i) < 0.0f && field2->at(i) < 0.0f )
+         {
+             averageErrorOut += std::abs( std::abs(field1->at(i)) - std::abs(field2->at(i)));
+             out++;
+         }
+         if( field1->at(i) >= 0.0f && field2->at(i) >= 0.0f )
+         {
+             averageErrorIn += std::abs( std::abs(field1->at(i)) - std::abs(field2->at(i)));
+             in++;
+         }
+    }
+
+    *inside  = averageErrorIn / in;
+    *outside = averageErrorOut / out;
+
+    return averageError / field1->size();
 }
 
 } //namespace hfrep2D
