@@ -83,16 +83,16 @@ int main(int argc, char** argv)
 
     for( size_t i = 0; i < 512*512; i++)
     {
-        frepH.push_back( frep.union_function(frep1H[i], frep.union_function( frep2H[i], frep3H[i] )));
-        frepT.push_back( frep.union_function( frep1T[i], frep2T[i] ) );
-        frepA.push_back( frep.union_function(frep1A[i], frep.union_function(frep2A[i],
-                                                        frep.union_function(frep3A[i], frep4A[i]))));
-        frepR.push_back( frep.union_function(frep1R[i], frep.union_function(frep2R[i],
-                                                         frep.union_function(frep3R[i],
-                                                         frep.union_function(frep4R[i], frep5R[i])))) );
-        frepE.push_back( frep.union_function(frep1E[i], frep.union_function(frep2E[i], frep.union_function(frep3E[i], frep4E[i]))) );
-        frepHEART.push_back( frep.union_function( frepH[i], frep.union_function(frepE[i],
-                             frep.union_function(frepA[i], frep.union_function(frepR[i],frepT[i] )) )) );
+        frepH.push_back( frep.union_function(frep1H[i], frep.union_function( frep2H[i], frep3H[i], 0.0f, 0.0f ), 0.0f, 0.0f));
+        frepT.push_back( frep.union_function( frep1T[i], frep2T[i], 0.0f, 0.0f ) );
+        frepA.push_back( frep.union_function(frep1A[i], frep.union_function(frep2A[i], frep.union_function(frep3A[i],
+                                                                   frep4A[i], 0.0f, 0.0f), 0.0f, 0.0f), 0.0f, 0.0f));
+        frepR.push_back( frep.union_function(frep1R[i], frep.union_function(frep2R[i], frep.union_function(frep3R[i],
+                         frep.union_function(frep4R[i], frep5R[i], 0.0f, 0.0f), 0.0f, 0.0f), 0.0f, 0.0f), 0.0f, 0.0f) );
+        frepE.push_back( frep.union_function(frep1E[i], frep.union_function(frep2E[i],
+                         frep.union_function(frep3E[i], frep4E[i], 0.0f, 0.0f), 0.0f, 0.0f), 0.0f, 0.0f) );
+        frepHEART.push_back( frep.union_function( frepH[i], frep.union_function(frepE[i], frep.union_function(frepA[i],
+                             frep.union_function( frepR[i], frepT[i], 0.0f, 0.0f ), 0.0f, 0.0f), 0.0f, 0.0f ), 0.0f, 0.0f) );
     }
 
     cv::Mat h_pic = cv::Mat(512, 512, CV_8UC1);
@@ -149,6 +149,51 @@ int main(int argc, char** argv)
     cv::imwrite("r.jpg", r_pic);
     cv::imwrite("e.jpg", e_pic);
     cv::imwrite("heartFR.jpg", heartFR_pic);
+
+    hfrep2D::HFRepObj2D hfrepHeart(512, 512, 0.0f);
+    std::vector<float> hfrepHeart1 = hfrepHeart.calculateHFRep2D( &heart, nullptr, HYPERBOLIC_SIGMOID, 0.00001f, true );
+    std::vector<float> ddtHeart1   = hfrepHeart.getSignedDDT();
+
+    std::vector<float> hfrepHeart2 = hfrepHeart.calculateHFRep2D( &heart, nullptr, HYPERBOLIC_TANGENT, 100000.0f, true );
+    std::vector<float> ddtHeart2   = hfrepHeart.getSignedDDT();
+
+    std::vector<float> hfrepHeart3 = hfrepHeart.calculateHFRep2D( &heart, nullptr, ALGEBRAIC, 100000.0f, true );
+    std::vector<float> ddtHeart3   = hfrepHeart.getSignedDDT();
+
+    std::vector<float> hfrepHeart4 = hfrepHeart.calculateHFRep2D( &heart, nullptr, GUDERMANIAN, 0.00001f, true );
+    std::vector<float> ddtHeart4   = hfrepHeart.getSignedDDT();
+
+    hfrep2D::ModifyField errorEstim;
+    float errorIn[]  = { 0.0f, 0.0f, 0.0f, 0.0f };
+    float errorOut[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    float averError[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    averError[0] = errorEstim.calcAverageFieldError( &hfrepHeart1, &ddtHeart1, &errorIn[0], &errorOut[0] );
+    averError[1] = errorEstim.calcAverageFieldError( &hfrepHeart2, &ddtHeart2, &errorIn[1], &errorOut[1] );
+    averError[2] = errorEstim.calcAverageFieldError( &hfrepHeart3, &ddtHeart3, &errorIn[2], &errorOut[2] );
+    averError[3] = errorEstim.calcAverageFieldError( &hfrepHeart4, &ddtHeart4, &errorIn[3], &errorOut[3] );
+
+    for ( int i = 0; i < 4; i++)
+    {
+        std::cout << " Average Error: " << averError[i] << " ; in: " << errorIn[i] << " ; out: " << errorOut[i] << std::endl;
+    }
+
+    frep.setScalingFactor( 6.0f );
+    std::vector<float> decocube = frep.getFRep2D( frep2D::Point2D(250.0, 250.0f),
+                                                    std::bind(&frep2D::FRepObj2D::decocube2D,
+                                                              frep, std::placeholders::_1, std::placeholders::_2 ));
+    std::vector<float> decocubeHfrep = hfrepHeart.calculateHFRep2D( &decocube, nullptr, HYPERBOLIC_SIGMOID, 0.00001f, true );
+    std::vector<float> decocubeSDDT  = hfrepHeart.getSignedDDT();
+
+
+    std::vector<float> frepCube;
+    for ( size_t i = 0; i < decocube.size(); i++) {
+        frepCube.push_back( decocube[i] /100000.0f );
+    }
+
+    hfrep2D::render2D render;
+    render.drawRGB_isolines( &frepCube, 512, 512, 0.0001f, "frep" );
+    render.drawRGB_isolines( &decocubeHfrep, 512, 512, 0.04f, "hfrep" );
+    render.drawRGB_isolines( &decocubeSDDT, 512, 512, 0.04f, "sddt" );
 
     return 0;
 }

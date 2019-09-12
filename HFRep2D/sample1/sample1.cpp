@@ -39,28 +39,28 @@ int main(int argc, char** argv)
     auto fun1 = std::bind(&frep2D::FRepObj2D::elf, frep, std::placeholders::_1 );
     std::vector<float> elf = frep.getFRep2D(fun1);
 
+    drawField.drawRGB_isolines( &elf, 512, 512, 0.0001f, "elf_frep" );
+
     DT.caclulateDiscreteDistanceTransformVec( &elf );
     std::vector<float> ddt1  = DT.get_DDT();
     std::vector<float> sddt1 = DT.get_signed_DDT();
     std::vector<float> zoomed_ddt = modField.zoom_field( &ddt1, start_regP, hfrep2D::Point2Di(128, 128),
                                                           hfrep2D::Point2Di(512, 512));
 
-    std::vector<uchar> img_field;
     // zoom in frep field and draw it
     std::vector<float> zoomed_frep = modField.zoom_field( &elf, start_regP, hfrep2D::Point2Di(128, 128),
                                                           hfrep2D::Point2Di(512, 512));
 
     // generate zoomed in HFrep and draw it
     std::vector<float> ZM_hfrep_vec;
-    hfrep.calculateHFRep2D( &zoomed_frep, &zoomed_ddt, step_function, slope, true );
-    ZM_hfrep_vec = hfrep.getHFRepVec();
+    ZM_hfrep_vec = hfrep.calculateHFRep2D( &zoomed_frep, &zoomed_ddt, step_function, slope, true );
 
-    drawField.drawRGB_isolines( &img_field, &ZM_hfrep_vec, 512, 512, 0.09f, "zoomed_hfrep", true );
+    drawField.drawRGB_isolines( &ZM_hfrep_vec, 512, 512, 0.09f, "zoomed_hfrep" );
 
     //draw the difference between hfrep and ddt
     std::vector<float> sm_zoomed_ddt = modField.smooth_field(&zoomed_ddt, 512, 512 );
     std::vector<float> diff_field = modField.diff_fields( &ZM_hfrep_vec, &sm_zoomed_ddt, 100000.0f );
-    drawField.drawRGB_isolines(&img_field, &diff_field, 512, 512, 0.0, "zoomed_diff_field");
+    drawField.drawRGB_isolines( &diff_field, 512, 512, 0.0, "zoomed_diff_field");
 
     //******************************************************************************************************
     //interpolation if the field is sparse
@@ -93,21 +93,20 @@ int main(int argc, char** argv)
     auto end_int_ddt = std::chrono::system_clock::now();
     std::chrono::duration<float> t_int_ddt = end_int_ddt - start_int_ddt;
 
-    drawField.drawRGB_isolines( &img_field, &inter_sddt, 512, 512, thres_vis_ddt , "sddt_512x512", true );
-    drawField.drawRGB_isolines( &img_field, &sp_sddt, 128, 128, thres_vis_ddt , "sddt_128x128", true );
+    drawField.drawRGB_isolines( &inter_sddt, 512, 512, thres_vis_ddt , "sddt_512x512" );
+    drawField.drawRGB_isolines( &sp_ddt, 128, 128, thres_vis_ddt , "ddt_128x128" );
 
     auto start_hfrep = std::chrono::system_clock::now();
-    hfrep.calculateHFRep2D( &elf, &inter_ddt, step_function, slope, true );
-    std::vector<float> hfrep0 = hfrep.getHFRepVec();
+    std::vector<float> hfrep0 = hfrep.calculateHFRep2D( &elf, &inter_ddt, step_function, slope, true );
     auto end_hfrep   = std::chrono::system_clock::now();
     std::chrono::duration<float> t_hfrep = end_hfrep - start_hfrep;
 
-    drawField.drawRGB_isolines( &img_field, &hfrep0, 512, 512, thres_vis_hfrep , "hfrep_512x512", true);
+    drawField.drawRGB_isolines( &hfrep0, 512, 512, thres_vis_hfrep , "hfrep_512x512");
 
     //calculate the difference between fields
     std::vector<float> sm_inter_ddt = modField.smooth_field(&inter_ddt, 512, 512);
     std::vector<float> diff_field_inter = modField.diff_fields( &hfrep0, &sm_inter_ddt, 100000.0 );
-    drawField.drawRGB_isolines( &img_field, &diff_field_inter, 512, 512, 0.0, "diff_hfrep_512x512" );
+    drawField.drawRGB_isolines( &diff_field_inter, 512, 512, 0.0, "diff_hfrep_512x512" );
 
     //******************************************************************************************************
     //estimating error for interpolated case
