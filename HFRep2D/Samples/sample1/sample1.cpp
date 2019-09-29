@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     float thres_vis_ddt   = 0.04f;
     float thres_vis_hfrep = 0.04f;
 
-    frep2D::FRepObj2D frep( 512, 512, 1.0f );
+    hfrep2D::FRepObj2D frep( 512, 512, 1.0f );
     hfrep2D::DiscreteDistanceTransform DT(512, 512);
     hfrep2D::HFRepObj2D  hfrep( 512, 512, 0 );
     hfrep2D::ModifyField modField;
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     //******************************************************************************************************
 
     //getting distance transform, zoom in, smooth, draw it
-    auto fun1 = std::bind(&frep2D::FRepObj2D::elf, frep, std::placeholders::_1 );
+    auto fun1 = std::bind(&hfrep2D::FRepObj2D::elf, frep, std::placeholders::_1 );
     std::vector<float> elf = frep.getFRep2D(fun1);
 
     drawField.drawRGB_isolines( &elf, 512, 512, 0.0001f, "elf_frep" );

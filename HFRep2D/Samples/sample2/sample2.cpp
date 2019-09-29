@@ -17,9 +17,9 @@
 
 int main(int argc, char** argv)
 {
-    frep2D::FRepObj2D frep( 512, 512, 4.0f );
-    auto fun = std::bind(&frep2D::FRepObj2D::heart2D, frep, std::placeholders::_1, std::placeholders::_2);
-    std::vector<float> heart = frep.getFRep2D( frep2D::Point2D( 250.0f, 150.0f ), fun );
+    hfrep2D::FRepObj2D frep( 512, 512, 4.0f );
+    auto fun = std::bind(&hfrep2D::FRepObj2D::heart2D, frep, std::placeholders::_1, std::placeholders::_2);
+    std::vector<float> heart = frep.getFRep2D( hfrep2D::Point2D( 250.0f, 150.0f ), fun );
 
     cv::Mat heart_pic = cv::Mat(512, 512, CV_8UC1);
     unsigned char* heart_buf = heart_pic.data;
@@ -35,47 +35,47 @@ int main(int argc, char** argv)
 
     cv::imwrite("heart.jpg", heart_pic);
 
-    auto fun1 = std::bind(&frep2D::FRepObj2D::rectangle, frep, std::placeholders::_1, std::placeholders::_2,
+    auto fun1 = std::bind(&hfrep2D::FRepObj2D::rectangle, frep, std::placeholders::_1, std::placeholders::_2,
                                                                std::placeholders::_3, std::placeholders::_4);
-    std::vector<float> frep1H = frep.getFRep2D( frep2D::Point2D( 100.0f, 350.0f ),
+    std::vector<float> frep1H = frep.getFRep2D( hfrep2D::Point2D( 100.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2H = frep.getFRep2D( frep2D::Point2D( 140.0f, 350.0f ),
+    std::vector<float> frep2H = frep.getFRep2D( hfrep2D::Point2D( 140.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep3H = frep.getFRep2D( frep2D::Point2D( 125.0f, 350.0f ),
+    std::vector<float> frep3H = frep.getFRep2D( hfrep2D::Point2D( 125.0f, 350.0f ),
                                                   20.0f, 10.0f, fun1 );
 
-    std::vector<float> frep1E = frep.getFRep2D( frep2D::Point2D( 170.0f, 350.0f ),
+    std::vector<float> frep1E = frep.getFRep2D( hfrep2D::Point2D( 170.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2E = frep.getFRep2D( frep2D::Point2D( 195.0f, 320.0f ),
+    std::vector<float> frep2E = frep.getFRep2D( hfrep2D::Point2D( 195.0f, 320.0f ),
                                                   20.0f, 10.0f, fun1 );
-    std::vector<float> frep3E = frep.getFRep2D( frep2D::Point2D( 195.0f, 350.0f ),
+    std::vector<float> frep3E = frep.getFRep2D( hfrep2D::Point2D( 195.0f, 350.0f ),
                                                   20.0f, 10.0f, fun1 );
-    std::vector<float> frep4E = frep.getFRep2D( frep2D::Point2D( 195.0f, 380.0f ),
+    std::vector<float> frep4E = frep.getFRep2D( hfrep2D::Point2D( 195.0f, 380.0f ),
                                                   20.0f, 10.0f, fun1 );
 
-    std::vector<float> frep1A = frep.getFRep2D( frep2D::Point2D( 235.0f, 350.0f ),
+    std::vector<float> frep1A = frep.getFRep2D( hfrep2D::Point2D( 235.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2A = frep.getFRep2D( frep2D::Point2D( 260.0f, 320.0f ),
+    std::vector<float> frep2A = frep.getFRep2D( hfrep2D::Point2D( 260.0f, 320.0f ),
                                                   30.0f, 10.0f, fun1 );
-    std::vector<float> frep3A = frep.getFRep2D( frep2D::Point2D( 285.0f, 350.0f ),
+    std::vector<float> frep3A = frep.getFRep2D( hfrep2D::Point2D( 285.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep4A = frep.getFRep2D( frep2D::Point2D( 260.0f, 350.0f ),
+    std::vector<float> frep4A = frep.getFRep2D( hfrep2D::Point2D( 260.0f, 350.0f ),
                                                   30.0f, 10.0f, fun1 );
 
-    std::vector<float> frep1R = frep.getFRep2D( frep2D::Point2D( 320.0f, 350.0f ),
+    std::vector<float> frep1R = frep.getFRep2D( hfrep2D::Point2D( 320.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2R = frep.getFRep2D( frep2D::Point2D( 365.0f, 330.0f ),
+    std::vector<float> frep2R = frep.getFRep2D( hfrep2D::Point2D( 365.0f, 330.0f ),
                                                   10.0f, 20.0f, fun1 );
-    std::vector<float> frep3R = frep.getFRep2D( frep2D::Point2D( 345.0f, 320.0f ),
+    std::vector<float> frep3R = frep.getFRep2D( hfrep2D::Point2D( 345.0f, 320.0f ),
                                                   30.0f, 10.0f, fun1 );
-    std::vector<float> frep4R = frep.getFRep2D( frep2D::Point2D( 345.0f, 350.0f ),
+    std::vector<float> frep4R = frep.getFRep2D( hfrep2D::Point2D( 345.0f, 350.0f ),
                                                   30.0f, 10.0f, fun1 );
-    std::vector<float> frep5R = frep.getRotatedFrep2D(frep2D::Point2D( 510.0f, 10.0f ),
+    std::vector<float> frep5R = frep.getRotatedFrep2D(hfrep2D::Point2D( 510.0f, 10.0f ),
                                                   25.0f, 10.0f, -45.0f*3.14f/180.0f, fun1 );
 
-    std::vector<float> frep1T = frep.getFRep2D( frep2D::Point2D( 415.0f, 350.0f ),
+    std::vector<float> frep1T = frep.getFRep2D( hfrep2D::Point2D( 415.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2T = frep.getFRep2D( frep2D::Point2D( 415.0f, 320.0f ),
+    std::vector<float> frep2T = frep.getFRep2D( hfrep2D::Point2D( 415.0f, 320.0f ),
                                                   30.0f, 10.0f, fun1 );
 
 
@@ -178,8 +178,8 @@ int main(int argc, char** argv)
     }
 
     frep.setScalingFactor( 6.0f );
-    std::vector<float> decocube = frep.getFRep2D( frep2D::Point2D(250.0, 250.0f),
-                                                    std::bind(&frep2D::FRepObj2D::decocube2D,
+    std::vector<float> decocube = frep.getFRep2D( hfrep2D::Point2D(250.0, 250.0f),
+                                                    std::bind(&hfrep2D::FRepObj2D::decocube2D,
                                                               frep, std::placeholders::_1, std::placeholders::_2 ));
     std::vector<float> decocubeHfrep = hfrepHeart.calculateHFRep2D( &decocube, nullptr, HYPERBOLIC_SIGMOID, 0.00001f, true );
     std::vector<float> decocubeSDDT  = hfrepHeart.getSignedDDT();

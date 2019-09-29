@@ -17,9 +17,9 @@
 
 inline int clipWithBounds( int n, int n_min, int n_max ) { return n > n_max ? n_max : ( n < n_min ? n_min : n );}
 inline float convertToUV( float val ) { return val / 512.0f; }
-inline frep2D::Point2D convertToUV( frep2D::Point2D val ) { return frep2D::Point2D( val.dx/512.0f, val.dy/512.0f ); }
+inline hfrep2D::Point2D convertToUV( hfrep2D::Point2D val ) { return hfrep2D::Point2D( val.dx/512.0f, val.dy/512.0f ); }
 
-float find_Y_coordinate( frep2D::Point2D cent1, frep2D::Point2D cent2, float R1, float R2 )
+float find_Y_coordinate( hfrep2D::Point2D cent1, hfrep2D::Point2D cent2, float R1, float R2 )
 {
     float X, Y;
     float A    = cent1.dx*cent1.dx + cent1.dy*cent1.dy - R1*R1;
@@ -52,11 +52,11 @@ float find_Y_coordinate( frep2D::Point2D cent1, frep2D::Point2D cent2, float R1,
 
 int main(int argc, char** argv)
 {
-    frep2D::FRepObj2D frep( 512, 512, 4.0f );
+    hfrep2D::FRepObj2D frep( 512, 512, 4.0f );
 
-    auto fun1 = std::bind(&frep2D::FRepObj2D::circle, frep, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    std::vector<float> circle0 = frep.getFRep2D( frep2D::Point2D( 250.0f, 150.0f ), 60.0f, fun1 );
-    std::vector<float> circle1 = frep.getFRep2D( frep2D::Point2D( 250.0f, 230.0f ), 90.0f, fun1 );
+    auto fun1 = std::bind(&hfrep2D::FRepObj2D::circle, frep, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    std::vector<float> circle0 = frep.getFRep2D( hfrep2D::Point2D( 250.0f, 150.0f ), 60.0f, fun1 );
+    std::vector<float> circle1 = frep.getFRep2D( hfrep2D::Point2D( 250.0f, 230.0f ), 90.0f, fun1 );
 
     hfrep2D::HFRepObj2D hfrep( 512, 512, 0 );
 
@@ -67,11 +67,11 @@ int main(int argc, char** argv)
     std::vector<float> sddt_circle1  = hfrep.getSignedDDT();
 
     //draw.drawRGB_isolines( &field, &hfrep_fin, 512, 512, 0.04f, "hfrep_combo", true );
-    auto fun2 = std::bind(&frep2D::FRepObj2D::rectangle, frep, std::placeholders::_1, std::placeholders::_2,
+    auto fun2 = std::bind(&hfrep2D::FRepObj2D::rectangle, frep, std::placeholders::_1, std::placeholders::_2,
                                                                std::placeholders::_3, std::placeholders::_4);
-    std::vector<float> rectangle = frep.getFRep2D( frep2D::Point2D(250.0f, 230.0f), 110.0f, 50.0f, fun2 );
+    std::vector<float> rectangle = frep.getFRep2D( hfrep2D::Point2D(250.0f, 230.0f), 110.0f, 50.0f, fun2 );
 
-    auto fun3 = std::bind( &frep2D::FRepObj2D::union_function, frep, std::placeholders::_1, std::placeholders::_2,
+    auto fun3 = std::bind( &hfrep2D::FRepObj2D::union_function, frep, std::placeholders::_1, std::placeholders::_2,
                                                                      std::placeholders::_3, std::placeholders::_4 );
     std::vector<float> frep_union = frep.getFRep2D( rectangle, circle0, 0.0f, 0.0f, fun3 );
     std::vector<float> frep_union_cir = frep.getFRep2D( circle0, circle1, 0.0f, 0.0f, fun3 );
@@ -92,9 +92,9 @@ int main(int argc, char** argv)
     {
         for (int x = 0; x < 512; x++)
         {
-            frep2D::Point2D grF1 = frep2D::Point2D( sddt_circle0[x+1+y*512]   - sddt_circle0[x+y*512],
+            hfrep2D::Point2D grF1 = hfrep2D::Point2D( sddt_circle0[x+1+y*512]   - sddt_circle0[x+y*512],
                                         sddt_circle0[x+(y+1)*512] - sddt_circle0[x+y*512] );
-            frep2D::Point2D grF2 = frep2D::Point2D( sddt_rec[x+1+y*512]   - sddt_rec[x+y*512],
+            hfrep2D::Point2D grF2 = hfrep2D::Point2D( sddt_rec[x+1+y*512]   - sddt_rec[x+y*512],
                                         sddt_rec[x+(y+1)*512] - sddt_rec[x+y*512] );
             sddt_circle.push_back( frep.union_function_R0( sddt_circle0[x+y*512], sddt_rec[x+y*512], grF1, grF2, 2.0f ));
 
@@ -105,8 +105,8 @@ int main(int argc, char** argv)
 
     //euclidean distance
     std::vector<float> true_dist0, true_dist1, true_dist2, dist_test;
-    frep2D::Point2D cent1 = convertToUV( frep2D::Point2D( 250.0f, 150.0f ) );
-    frep2D::Point2D cent2 = convertToUV( frep2D::Point2D( 250.0f, 230.0f ) );
+    hfrep2D::Point2D cent1 = convertToUV( hfrep2D::Point2D( 250.0f, 150.0f ) );
+    hfrep2D::Point2D cent2 = convertToUV( hfrep2D::Point2D( 250.0f, 230.0f ) );
 
     std::vector<float> inside0, outside0, inside1, outside1;
     for (int y = 0; y < 512; y++)
@@ -123,12 +123,12 @@ int main(int argc, char** argv)
 
             true_dist0.push_back( std::max( dist1, dist2 ) );
 
-            frep2D::Point2D grF1 = frep2D::Point2D( -(u - cent1.dx)/
+            hfrep2D::Point2D grF1 = hfrep2D::Point2D( -(u - cent1.dx)/
                                    std::sqrt((u - cent1.dx)*(u - cent1.dx) + (v - cent1.dy)*(v - cent1.dy)),
                                                     -(v - cent1.dy)/
                                    std::sqrt((u - cent1.dx)*(u - cent1.dx) + (v - cent1.dy)*(v - cent1.dy)));
 
-            frep2D::Point2D grF2 = frep2D::Point2D( -(u - cent2.dx)/
+            hfrep2D::Point2D grF2 = hfrep2D::Point2D( -(u - cent2.dx)/
                                    std::sqrt((u - cent2.dx)*(u - cent2.dx) + (v - cent2.dy)*(v - cent2.dy)),
                                                     -(v - cent2.dy)/
                                    std::sqrt((u - cent2.dx)*(u - cent2.dx) + (v - cent2.dy)*(v - cent2.dy)));
