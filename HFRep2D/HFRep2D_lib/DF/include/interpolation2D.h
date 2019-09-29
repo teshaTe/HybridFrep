@@ -1,21 +1,10 @@
 #ifndef H_MODIFY_FIELD
 #define H_MODIFY_FIELD
 
+#include "helperFunctions.h"
 #include <vector>
 
 namespace hfrep2D {
-
-struct Point2Df
-{
-    Point2Df(float x, float y) : dx(x), dy(y) { }
-    float dx, dy;
-};
-
-struct Point2Di
-{
-    Point2Di(int x, int y) : dx(x), dy(y) { }
-    int dx, dy;
-};
 
 enum interpolation
 {

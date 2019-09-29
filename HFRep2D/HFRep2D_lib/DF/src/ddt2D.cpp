@@ -1,4 +1,4 @@
-#include "include/ddt2D.h"
+#include "ddt2D.h"
 
 #include <chrono>
 #include <ctime>
@@ -22,6 +22,20 @@ void DiscreteDistanceTransform::caclulateDiscreteDistanceTransformVec(std::vecto
     generate_DF( grid_1 );
     generate_DF( grid_2 );
     merge_grids( DDT );
+}
+
+void DiscreteDistanceTransform::calculateSparseDiscreteDistanceTransformVec(std::vector<float> *inField, int inFResX, int inFResY, float stX, float stY)
+{
+    std::vector<float> sparseFrep;
+    for(int y = 0; y < inFResY; y+=stY )
+    {
+        for(int x = 0; x < inFResX; x+=stX)
+        {
+            sparseFrep.push_back( inField->at( x+y*inFResX ) );
+        }
+    }
+
+    caclulateDiscreteDistanceTransformVec( &sparseFrep );
 }
 
 /*

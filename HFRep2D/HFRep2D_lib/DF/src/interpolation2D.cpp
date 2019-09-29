@@ -1,4 +1,4 @@
-#include "include/interpolation2D.h"
+#include "interpolation2D.h"
 
 #include <cmath>
 #include <iostream>

@@ -1,18 +1,19 @@
+/*
+ * The algorithm used for computing the Signed Discrete Distance Transform is based on the article
+ * "Fast raster scan distance propagation on the discrete rectangular lattice", F. Leymarie and M.D. Levine
+ * ( https://www.sciencedirect.com/science/article/pii/104996609290008Q?via%3Dihub )
+ */
+
 #ifndef DISTANCE_FIELD_H
 #define DISTANCE_FIELD_H
+
+#include "helperFunctions.h"
 
 #include <vector>
 #include <cmath>
 
 namespace hfrep2D
 {
-
-struct Point2D
-{
-    Point2D(float x, float y) : dx(x), dy(y) { }
-    float dx, dy;
-    float EuclideanDist() { return (std::pow(dx, 2.0f) + std::pow(dy, 2.0f)); }
-};
 
 class DiscreteDistanceTransform
 {
@@ -22,8 +23,10 @@ public:
     ~DiscreteDistanceTransform(){ }
 
     void caclulateDiscreteDistanceTransformVec( std::vector<float> *inField );
+    void calculateSparseDiscreteDistanceTransformVec( std::vector<float> *inField, int inFResX, int inFResY, float stX, float stY );
     void caclulateDiscreteDistanceTransformImg( );
 
+    inline void setNewResolution( int resX, int resY ) { res_x = resX; res_y = resY; }
     inline std::vector<float> get_DDT() { return DDT; }
     inline std::vector<float> get_signed_DDT() { return SDDT; }
     inline int clipWithBounds( int n, int n_min, int n_max ) { return n > n_max ? n_max : ( n < n_min ? n_min : n );}
