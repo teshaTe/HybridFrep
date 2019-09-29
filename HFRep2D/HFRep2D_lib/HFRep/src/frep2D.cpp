@@ -1,8 +1,8 @@
-#include "include/frep2D.h"
+#include "frep2D.h"
 #include <iostream>
 #include <cmath>
 
-namespace frep2D {
+namespace hfrep2D {
 
 FRepObj2D::FRepObj2D(int resX, int resY, float scaleF )
 {
@@ -320,6 +320,91 @@ float FRepObj2D::elf( Point2D pos )
     return elf;
 }
 
+float FRepObj2D::bat(Point2D pos)
+{
+    float rec0 = rectangle( pos, Point2D(250, 250), 50, 30 ); //main body
+    float rec1 = rectangle( pos, Point2D(330, 245), 40, 35 );
+    float rec2 = rectangle( pos, Point2D(170, 245), 40, 35 );
+    float rec3 = rectangle( pos, Point2D(335, 204), 35, 9 );
+    float rec4 = rectangle( pos, Point2D(165, 204), 35, 9 );
+    float rec5 = rectangle( pos, Point2D(250, 215), 12, 6 );  //head
+
+    float tri0 = triangle2( getRotatedCoords(pos, 45), getRotatedCoords(Point2D(250, 270),45), 40, 40 );
+    float tri1 = triangle2( pos, Point2D(216, 216), 7, 7 );
+    float tri2 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2D(284, 216),90), 7, 7 );
+    float tri3 = triangle2( pos, Point2D(204, 203), 5, 8 );
+    float tri4 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2D(296, 203),90), 8, 5 );
+    float tri5 = triangle2( pos, Point2D(258.5, 200), 4, 10 );
+    float tri6 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2D(241, 200),90), 10, 4 );
+    float tri7 = triangle2( getRotatedCoords(pos, 180), getRotatedCoords(Point2D(98, 230),180), 40, 35 );
+    float tri8 = triangle2( getRotatedCoords(pos, 270), getRotatedCoords(Point2D(400, 230),270), 35, 40 );
+
+    float union1  = union_function( rec0, rec1, 0, 0 );
+    float union2  = union_function( rec2, union1, 0, 0 );
+    float union3  = union_function( rec3, union2, 0, 0 );
+    float union4  = union_function( rec4, union3, 0, 0 );
+    float union5  = union_function( rec5, union4, 0, 0 );
+    float union6  = union_function( tri0, union5, 0, 0 );
+    float union7  = union_function( tri1, union6, 0, 0 );
+    float union8  = union_function( tri2, union7, 0, 0 );
+    float union9  = union_function( tri3, union8, 0, 0 );
+    float union10 = union_function( tri4, union9, 0, 0 );
+    float union11 = union_function( tri5, union10, 0, 0 );
+    float union12 = union_function( tri6, union11, 0, 0 );
+    float union13 = union_function( tri7, union12, 0, 0 );
+    float bat     = union_function( tri8, union13, 0, 0 );
+
+    return bat;
+}
+
+float FRepObj2D::trebleClef(Point2D pos)
+{
+    //constructing bottom part
+    float rec_base = rectangle( pos, Point2D(250, 230), 15, 120 );
+    float ark1     = circle( pos, Point2D(230, 345), 35 );
+    float ark2     = circle( pos, Point2D(200, 325), 40 );
+    float ark3     = circle( pos, Point2D(220, 345), 35 );
+    float ark4     = circle( pos, Point2D(230, 320), 35 );
+    float circ_bot = circle( pos, Point2D(210, 335), 20 );
+
+    float arkB1 = subtract_function( ark1, ark2, 0.0f, 0.0f );
+    float arkB2 = subtract_function( ark3, ark4, 0.0f, 0.0f );
+
+    float union1  = union_function( arkB1, rec_base, 0.0f, 0.0f );
+    float union2  = union_function( arkB2, union1, 0.0f, 0.0f );
+    float fin_bot = union_function( circ_bot, union2, 0.0f, 0.0f );
+
+    //constructing middle part
+    float ark5 = circle( pos, Point2D(262, 240), 60 );
+    float ark6 = circle( pos, Point2D(245, 245), 49 );
+    float ark7 = circle( pos, Point2D(250, 222), 80 );
+    float ark8 = circle( pos, Point2D(265, 222), 70 );
+
+    float arkM1 = subtract_function( ark5, ark6, 0.0f, 0.0f );
+    float arkM2 = subtract_function( ark7, ark8, 0.0f, 0.0f );
+
+    float union3     = union_function( arkM1, fin_bot, 0.0f, 0.0f );
+    float fin_middle = union_function( arkM2, union3, 0.0f, 0.0f );
+
+    //constructing upper part
+    float ark9  = circle( pos, Point2D(250, 95), 57 );
+    float ark10 = circle( pos, Point2D(220, 81), 65 );
+    float ark11 = circle( pos, Point2D(294, 100), 60 );
+    float ark12 = circle( pos, Point2D(337, 90), 75 );
+    float rec_helper1 = rectangle( pos, Point2D(250, 163), 100, 50 );
+    float circ_top    = circle( pos, Point2D(277, 49), 5 );
+
+    float arkU1  = subtract_function( ark9, ark10, 0.0f, 0.0f );
+    float arkU2  = subtract_function( ark11, ark12, 0.0f, 0.0f );
+    float arkU2f = subtract_function( arkU2, rec_helper1, 0.0f, 0.0f );
+
+    float union4 = union_function( arkU1, fin_middle, 0.0f, 0.0f );
+    float union5 = union_function( circ_top, union4, 0.0f, 0.0f );
+    float trebleclef = union_function( arkU2f, union5, 0.0f, 0.0f );
+
+    return trebleclef;
+}
+
 float FRepObj2D::bounded_blending(float f1, float f2, float a0, float a1, float a2, float a3,
                                   float time, float alpha, float m)
 {
@@ -401,7 +486,7 @@ float FRepObj2D::union_function_R0(float f1, float f2, float n)
     return result;
 }
 
-float FRepObj2D::union_function_R0(float f1, float f2, frep2D::Point2D gradf1, frep2D::Point2D gradf2, float n)
+float FRepObj2D::union_function_R0(float f1, float f2, Point2D gradf1, Point2D gradf2, float n)
 {
     float result = 0.0f;
 

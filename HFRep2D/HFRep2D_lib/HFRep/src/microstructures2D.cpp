@@ -1,8 +1,8 @@
-#include "include/microstructures2D.h"
+#include "microstructures2D.h"
 
 #include <iostream>
 
-namespace frep2D {
+namespace hfrep2D {
 
 microstruct::microstruct(int res_x, int res_y)
 {

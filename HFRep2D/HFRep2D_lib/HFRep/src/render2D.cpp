@@ -1,7 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
-#include "include/render2D.h"
+#include "render2D.h"
 
 #include "opencv2/highgui.hpp"
 

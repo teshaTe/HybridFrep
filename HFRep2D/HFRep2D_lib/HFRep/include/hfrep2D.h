@@ -19,9 +19,12 @@ class HFRepObj2D
 
 public:
     HFRepObj2D(int res_x, int res_y, int ddt_sh);
+    ~HFRepObj2D() {}
 
-    std::vector<float> calculateHFRep2D(std::vector<float> *frep, std::vector<float> *ddt, int stepfunc, float st_slope , bool checkHFRep);
+    std::vector<float> calculateHFRep2D(std::vector<float> *frep, std::vector<float> *ddt, int stepfunc, float st_slope , bool checkHFRep = false);
+
     void checkHFrep(std::vector<float> *hfrep , std::vector<float> *frep, std::string hfrep_check_name = "" );
+
     float get_step_function_val(float frep_val, int function, float st_slope);
 
     inline std::vector<float> getDDT()         { return DDT; }

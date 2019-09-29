@@ -1,17 +1,12 @@
 #ifndef H_FREP_CLASS
 #define H_FREP_CLASS
 
+#include "helperFunctions.h"
 #include <cmath>
 #include <vector>
 #include <functional>
 
-namespace frep2D {
-
-struct Point2D
-{
-    Point2D(float x, float y) { dx = x; dy = y; }
-    float dx, dy;
-};
+namespace hfrep2D {
 
 class FRepObj2D
 {
@@ -36,6 +31,8 @@ public:
     float decocube2D( Point2D pos, Point2D cent );
     float suriken(Point2D pos, Point2D cent );
     float elf(Point2D pos);
+    float bat(Point2D pos);
+    float trebleClef(Point2D pos);
 
     std::vector<float> getFRep2D( std::function<float( Point2D )> fun);
     std::vector<float> getFRep2D( Point2D cent, std::function<float( Point2D, Point2D )> fun);
@@ -57,10 +54,16 @@ public:
     float constOffset(float f, float offset);
     float constRadiusOffset(float f, float fOffset, float R, float x0, float y0 );
 
-    float intersect_function_R0(float f1, float f2, frep2D::Point2D gradf1, frep2D::Point2D gradf2, float n);
+    float intersect_function_R0(float f1, float f2, Point2D gradf1, Point2D gradf2, float n);
     float union_function_R0(float f1, float f2, Point2D gradf1, Point2D gradf2, float n);
     float union_function_R0(float f1, float f2, float n);
 
+    std::vector<float> scaleFunction( const std::vector<float> field, const float factor )
+    {
+        std::vector<float> scaledField;
+        std::transform( field.begin(), field.end(), std::back_inserter(scaledField), std::bind1st(std::multiplies<float>(), factor) );
+        return scaledField;
+    }
 
     inline float intersect_function(float f1, float f2, float alpha, float m)
     { return (1.0f/(1.0f+alpha))*( f1 + f2 - std::sqrt(f1 * f1 + f2 * f2 - 2*alpha*f1*f2)*std::pow(f1*f1+f2*f2, m/2.0f)); }

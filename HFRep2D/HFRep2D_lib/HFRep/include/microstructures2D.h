@@ -6,7 +6,7 @@
 
 #include "frep2D.h"
 
-namespace frep2D {
+namespace hfrep2D {
 
 enum unitCellType
 {
