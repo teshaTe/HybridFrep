@@ -1,26 +1,38 @@
 cmake_minimum_required(VERSION 3.1)
-
 project(HFRep2D_lib)
 
-set (SRC_HEADERS  include/ddt2D.h
-                  include/frep2D.h
-                  include/hfrep2D.h
-                  include/render2D.h
-                  include/interpolation2D.h
-                  include/interpolation.h
-                  include/microstructures2D.h
+set( SRC_DATA_STRUCTURES_HEADERS DataStructures/include/activeList.h
+                                 DataStructures/include/helperFunctions.h
     )
 
-set (SRC_SOURCE   src/ddt2D.cpp
-                  src/frep2D.cpp
-                  src/hfrep2D.cpp
-                  src/render2D.cpp
-                  src/interpolation2D.cpp
-                  src/interpolation.cpp
-                  src/microstructures2D.cpp
+set( SRC_SDF_HEADERS  DF/include/ddt2D.h
+                      DF/include/diffusionSolver2D.h
+                      DF/include/eikonalSolver2D.h
+                      DF/include/interpolation2D.h
+                      DF/include/interpolation.h
     )
 
-add_library( hfrep2D_lib ${SRC_SOURCE} ${SRC_HEADERS} )
+set( SRC_HFREP_HEADERS  HFRep/include/frep2D.h
+                        HFRep/include/hfrep2D.h
+                        HFRep/include/render2D.h
+                        HFRep/include/microstructures2D.h
+   )
+
+set( SRC_SDF_SOURCES  DF/src/ddt2D.cpp
+                      DF/src/diffusionSolver2D.cpp
+                      DF/src/eikonalSolver2D.cpp
+                      DF/src/interpolation2D.cpp
+                      DF/src/interpolation.cpp
+    )
+
+set( SRC_HFREP_SOURCES  HFRep/src/frep2D.cpp
+                        HFRep/src/hfrep2D.cpp
+                        HFRep/src/render2D.cpp
+                        HFRep/src/microstructures2D.cpp
+    )
+
+add_library( hfrep2D_lib ${SRC_DATA_STRUCTURES_HEADERS} ${SRC_SDF_SOURCES} ${SRC_HFREP_SOURCES}
+                         ${SRC_DATA_STRUCTURES_SOURCES} ${SRC_SDF_HEADERS} ${SRC_HFREP_HEADERS} )
 
 target_link_libraries(hfrep2D_lib opencv_imgcodecs opencv_highgui opencv_imgproc opencv_core )
 
