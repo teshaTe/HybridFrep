@@ -49,7 +49,7 @@ void DiscreteDistanceTransform::create_grid(std::vector<float> *field )
        {
            int ind = index( x, y);
 
-           if(field->at(x+y*res_x) >= 0)
+           if(field->at(x+y*res_x) >= -0.0001f)
            {
                fill_grid_element( grid_1, INSIDE, ind );
                fill_grid_element( grid_2, EMPTY,  ind );
@@ -66,14 +66,14 @@ void DiscreteDistanceTransform::create_grid(std::vector<float> *field )
 /*
  * compare_grid_points(...) - function for comparing values in DDT grid  (8 neighbours algorithm is made)
  */
-void DiscreteDistanceTransform::compare_grid_points(std::vector<Point2D> &grid, Point2D &point,
+void DiscreteDistanceTransform::compare_grid_points(std::vector<node2D> &grid, node2D &point,
                                                     int offsetx, int offsety, int x, int y)
 {
     if(x + offsetx >= 0 && x + offsetx < res_x &&
        y + offsety >= 0 && y + offsety < res_y)
     {
         int ind = index(x + offsetx, y + offsety);
-        Point2D other_point = get_grid_element( grid, ind );
+        node2D other_point = get_grid_element( grid, ind );
         other_point.dx += offsetx;
         other_point.dy += offsety;
 
@@ -86,7 +86,7 @@ void DiscreteDistanceTransform::compare_grid_points(std::vector<Point2D> &grid, 
  * generate_DF(...) - function which allows one to calculate distance field using 8-point algorithm.
  *                    the central point is chosen and comparing algorithm is called looking in 8 neighbours around
  */
-void DiscreteDistanceTransform::generate_DF(std::vector<Point2D> &grid)
+void DiscreteDistanceTransform::generate_DF(std::vector<node2D> &grid)
 {
 // Pass 0: firstly filtering grid in forward manner on both x & y, then on x in reverse manner
     for (int y = 0; y < static_cast<int>(res_y); y++)
@@ -94,7 +94,7 @@ void DiscreteDistanceTransform::generate_DF(std::vector<Point2D> &grid)
         for (int x = 0; x < static_cast<int>(res_x); x++)
         {
            int ind = index( x, y );
-           Point2D point = get_grid_element( grid, ind );
+           node2D point = get_grid_element( grid, ind );
            compare_grid_points( grid, point, -1,  0, x, y );
            compare_grid_points( grid, point,  0, -1, x, y );
            compare_grid_points( grid, point, -1, -1, x, y );
@@ -105,7 +105,7 @@ void DiscreteDistanceTransform::generate_DF(std::vector<Point2D> &grid)
          for (int x = static_cast<int>(res_x-1); x >= 0; x--)
          {
             int ind = index( x, y );
-            Point2D point = get_grid_element( grid, ind);
+            node2D point = get_grid_element( grid, ind);
             compare_grid_points( grid, point, 1, 0, x, y);
             fill_grid_element( grid, point, ind);
          }
@@ -117,7 +117,7 @@ void DiscreteDistanceTransform::generate_DF(std::vector<Point2D> &grid)
        for (int x = static_cast<int>(res_x-1); x >= 0; x--)
        {
            int ind = index( x, y );
-           Point2D point = get_grid_element( grid, ind);
+           node2D point = get_grid_element( grid, ind);
            compare_grid_points( grid, point,  1,  0, x, y);
            compare_grid_points( grid, point,  0,  1, x, y);
            compare_grid_points( grid, point, -1,  1, x, y);
@@ -128,7 +128,7 @@ void DiscreteDistanceTransform::generate_DF(std::vector<Point2D> &grid)
        for (int x = 0; x < static_cast<int>(res_x); x++)
        {
            int ind = index( x, y );
-           Point2D point = get_grid_element( grid, ind);
+           node2D point = get_grid_element( grid, ind);
            compare_grid_points( grid, point, -1, 0, x, y);
            fill_grid_element( grid, point, ind);
        }
