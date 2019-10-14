@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.1)
 project(HFRep2D_lib)
 
-set( SRC_DATA_STRUCTURES_HEADERS DataStructures/include/activeList.h
-                                 DataStructures/include/helperFunctions.h
+set( SRC_HELPER_FUN_HEADERS HelperFunctions/include/timer.hpp )
+
+set( SRC_DATA_STRUCTURES_HEADERS DataStructures/include/helperFunctions.hpp
     )
+
+set( SRC_DATA_STRUCTURES_SOURCES )
 
 set( SRC_SDF_HEADERS  DF/include/ddt2D.h
                       DF/include/diffusionSolver2D.h
@@ -32,7 +35,8 @@ set( SRC_HFREP_SOURCES  HFRep/src/frep2D.cpp
     )
 
 add_library( hfrep2D_lib ${SRC_DATA_STRUCTURES_HEADERS} ${SRC_SDF_SOURCES} ${SRC_HFREP_SOURCES}
-                         ${SRC_DATA_STRUCTURES_SOURCES} ${SRC_SDF_HEADERS} ${SRC_HFREP_HEADERS} )
+                         ${SRC_DATA_STRUCTURES_SOURCES} ${SRC_SDF_HEADERS} ${SRC_HFREP_HEADERS}
+                         ${SRC_HELPER_FUN_HEADERS})
 
 target_link_libraries(hfrep2D_lib opencv_imgcodecs opencv_highgui opencv_imgproc opencv_core )
 

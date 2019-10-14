@@ -10,11 +10,16 @@
 #ifndef FIM_SOLVER_CLASS
 #define FIM_SOLVER_CLASS
 
-#include "activeList.h"
-#include "helperFunctions.h"
+//#include "activeList.h"
+#include "helperFunctions.hpp"
+#include "timer.hpp"
 
 #include <vector>
 #include <memory>
+#include <cmath>
+#include <list>
+#include <iterator>
+#include <algorithm>
 
 namespace hfrep2D {
 
@@ -26,15 +31,19 @@ public:
 
     /**
      * @brief solveEikonalEquationParallel_CPU - this function implements basic FIM algorithm
-     * @param inField
+     * @param inField       -
+     * @param error         -
+     * @param convNodeThres -
      */
-    void solveEikonalEquationParallel_CPU(const std::vector<float> *inField, const float error, const float convNodeThres);
+    void solveEikonalEquationParallel_CPU();
 
     /**
      * @brief solveEikonalEquationParallel_CPU_lockFree - this function implements modified lock-free version of FIM algorithm;
-     * @param inField
+     * @param inField       -
+     * @param error         -
+     * @param convNodeThres -
      */
-    void solveEikonalEquationParallel_CPU_lockFree( std::vector<float> inField, float error, float convNodeThres );
+    void solveEikonalEquationParallel_CPU_lockFree(const std::vector<float> inField, const float convNodeThres );
 
     /**
      * @brief solveEikonalEquationParallel_GPU - this function implements Group-Ordered FIM algorithm
@@ -42,29 +51,44 @@ public:
      */
     void solveEikonalEquationParallel_GPU( std::vector<float> inField );
 
-    //HELPER FUNCTIONS
-    inline std::vector<float> getDistanceField() { return dField; }
-    inline void setNewRes(int grX, int grY ) { resX = grX; resY = grY; }
+    inline std::vector<float> getDistanceField(){ normField(); return dField; }
+    inline void setNewRes(const int grX, const int grY ) { resX = grX; resY = grY; }
+    inline void setSources( std::vector<float> *inField=nullptr, std::vector<Point2Di> *inPoints=nullptr )
+    { srcField = inField; srcPoints = inPoints; }
 
 private:
-    void initialiseGrid(const std::vector<float> *field );
+    //basic functions for computing FIM
+    void initialiseGrid();
+    void updateSolution();
+    float godunovSolver(int ind, float speedFun , float h = 1.0f);
+    Point2Df getGodunovABvals(int ind);
 
-    float godunovSolver();
-    float getEdge( aNode node1, aNode node2 );
-
-    bool isNodesAdjacent( aNode node1, aNode node2 );
-    bool isNodeUpwind( aNode node1, aNode node2 );
+    std::vector<int> getNeighbours(int ind);
 
     //compute the infinite value
     inline float calculateINF() { return std::max(resX, resY) + 1; }
+    inline bool isNodeConverged(float p, float q, float thres ) { return std::abs(p - q) <= thres; }
+
+    bool isNodeInList( int ind )
+    {
+       auto it = std::find(aList1.begin(), aList1.end(), ind);
+       return it != aList1.end();
+    }
+
+    inline void normField(){ std::transform(dField.begin(), dField.end(), dField.begin(),
+                                           std::bind2nd(std::multiplies<float>(), 10.0f/Inf)); }
 
 private:
     int resX, resY;
-    float Inf;
-    std::vector<Point2D> grid;        // grid for computations
-    std::vector<float> dField;        // resulting field
-    std::shared_ptr<activeList> aList1; // reference tp the Active List class
+    float Inf, spFun;
 
+    std::vector<float> dField; // resulting distance field
+    std::vector<Point2Di> *srcPoints;
+    std::vector<float> *srcField;
+
+    //activeList aList1;
+    std::list<int> aList1;
+    std::shared_ptr<timer> profile;
 };
 
 } //namespace hfrep2D
