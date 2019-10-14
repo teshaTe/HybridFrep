@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace hfrep2D {
 

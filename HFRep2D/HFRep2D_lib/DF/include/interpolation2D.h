@@ -1,8 +1,9 @@
 #ifndef H_MODIFY_FIELD
 #define H_MODIFY_FIELD
 
-#include "helperFunctions.h"
+#include "helperFunctions.hpp"
 #include <vector>
+#include <cmath>
 
 namespace hfrep2D {
 

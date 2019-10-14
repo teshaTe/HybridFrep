@@ -11,10 +11,10 @@ FRepObj2D::FRepObj2D(int resX, int resY, float scaleF )
     scale       = scaleF;
 }
 
-float FRepObj2D::triangle(Point2D pos, Point2D cent, float a, float b, float c)
+float FRepObj2D::triangle(Point2Df pos, Point2Df cent, float a, float b, float c)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     a = convertToUV( a ); // right side
     b = convertToUV( b ); // left side
     c = convertToUV( c ); // the base of the triangle
@@ -27,11 +27,11 @@ float FRepObj2D::triangle(Point2D pos, Point2D cent, float a, float b, float c)
     return intersect_function( intersect_function( lb1,  rb1, 0.0f, 0.0f), -shY+c, 0.0f, 0.0f );
 }
 
-float FRepObj2D::triangle2(Point2D pos, Point2D cent, const float a, const float b)
+float FRepObj2D::triangle2(Point2Df pos, Point2Df cent, const float a, const float b)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
-    Point2D sides = convertToUV( Point2D(a, b) );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
+    Point2Df sides = convertToUV( Point2Df(a, b) );
 
     float rec = rectangle( pos, cent, a, b );
 
@@ -42,10 +42,10 @@ float FRepObj2D::triangle2(Point2D pos, Point2D cent, const float a, const float
     return intersect_function( rec, line, 0.0f, 0.0f );
 }
 
-float FRepObj2D::circle(Point2D pos, Point2D cent, float R)
+float FRepObj2D::circle(Point2Df pos, Point2Df cent, float R)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     R = convertToUV( R );
 
     float shX = uv.dx - c0.dx;
@@ -53,10 +53,10 @@ float FRepObj2D::circle(Point2D pos, Point2D cent, float R)
     return R*R - shX*shX - shY*shY;
 }
 
-float FRepObj2D::blobby2D(Point2D pos, Point2D cent, float R)
+float FRepObj2D::blobby2D(Point2Df pos, Point2Df cent, float R)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     R = convertToUV( R );
 
     float shX = uv.dx - c0.dx;
@@ -64,30 +64,30 @@ float FRepObj2D::blobby2D(Point2D pos, Point2D cent, float R)
     return R*R/( shX*shX + shY*shY);
 }
 
-float FRepObj2D::ellipticCylZ2D(Point2D pos, Point2D cent, float a, float b)
+float FRepObj2D::ellipticCylZ2D(Point2Df pos, Point2Df cent, float a, float b)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
 
     float shX = uv.dx - c0.dx;
     float shY = uv.dy - c0.dy;
     return 1.0f/resolutionX - std::pow( shX, 2.0f )/( a*a ) - std::pow( shY, 2.0f )/( b*b );
 }
 
-float FRepObj2D::ellipsoid2D(Point2D pos, Point2D cent, float a, float b)
+float FRepObj2D::ellipsoid2D(Point2Df pos, Point2Df cent, float a, float b)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
 
     float shX = uv.dx - c0.dx;
     float shY = uv.dy - c0.dy;
     return 1.0f/resolutionX - std::pow( ( shX )/a, 2.0f ) - std::pow( ( shY )/b, 2.0f );
 }
 
-float FRepObj2D::torusY2D(Point2D pos, Point2D cent, float R, float rev)
+float FRepObj2D::torusY2D(Point2Df pos, Point2Df cent, float R, float rev)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     R = convertToUV( R );
 
     float shX = uv.dx - c0.dx;
@@ -96,10 +96,10 @@ float FRepObj2D::torusY2D(Point2D pos, Point2D cent, float R, float rev)
             2.0f*rev*std::sqrt( std::pow( shX, 2.0f ) + std::pow( shY, 2.0f ));
 }
 
-float FRepObj2D::torusZ2D(Point2D pos, Point2D cent, float R, float rev)
+float FRepObj2D::torusZ2D(Point2Df pos, Point2Df cent, float R, float rev)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     R = convertToUV( R );
 
     float shX = uv.dx - c0.dx;
@@ -109,31 +109,31 @@ float FRepObj2D::torusZ2D(Point2D pos, Point2D cent, float R, float rev)
             rev*rev + 2.0f*rev*std::sqrt( std::pow( shX, 2.0f ) + std::pow( shY, 2.0f ) );
 }
 
-float FRepObj2D::rectangle(Point2D pos, Point2D cent, float w, float h )
+float FRepObj2D::rectangle(Point2Df pos, Point2Df cent, float w, float h )
 {
-    Point2D uv  = convertToUV( pos );
-    Point2D c0  = convertToUV( cent );
-    Point2D rec = convertToUV( Point2D(w, h) );
+    Point2Df uv  = convertToUV( pos );
+    Point2Df c0  = convertToUV( cent );
+    Point2Df rec = convertToUV( Point2Df(w, h) );
 
     float shX = uv.dx - c0.dx;
     float shY = uv.dy - c0.dy;
     return intersect_function( rec.dx - std::abs(shX), rec.dy - std::abs(shY), 0.0f, 0.0f );
 }
 
-float FRepObj2D::heart2D(Point2D pos, Point2D cent)
+float FRepObj2D::heart2D(Point2Df pos, Point2Df cent)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     float shX = uv.dx - c0.dx;
     float shY = uv.dy - c0.dy;
     return - std::pow( scale*scale*shX*shX + scale*scale*shY*shY - 1.0f, 3.0f ) +
             scale*scale*shX*shX*std::pow( scale*shY, 3.0f );
 }
 
-float FRepObj2D::decocube2D(Point2D pos, Point2D cent)
+float FRepObj2D::decocube2D(Point2Df pos, Point2Df cent)
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     float shX = uv.dx - c0.dx;
     float shY = uv.dy - c0.dy;
 
@@ -142,10 +142,10 @@ float FRepObj2D::decocube2D(Point2D pos, Point2D cent)
            ( std::pow( scale*scale*shX*shX - 2.0f, 2.0f ) + std::pow(scale*scale*shY*shY-1.0f, 2.0f)) + 50.0f;
 }
 
-float FRepObj2D::suriken( Point2D pos, Point2D cent )
+float FRepObj2D::suriken( Point2Df pos, Point2Df cent )
 {
-    Point2D uv = convertToUV( pos );
-    Point2D c0 = convertToUV( cent );
+    Point2Df uv = convertToUV( pos );
+    Point2Df c0 = convertToUV( cent );
     float shX = uv.dx - c0.dx;
     float shY = uv.dy - c0.dy;
 
@@ -167,49 +167,49 @@ float FRepObj2D::suriken( Point2D pos, Point2D cent )
                                              trian3, 0.0f, 0.0f ), trian4, 0.0f, 0.0f );
 }
 
-float FRepObj2D::elf( Point2D pos )
+float FRepObj2D::elf( Point2Df pos )
 {
-    Point2D uv = convertToUV( pos );
+    Point2Df uv = convertToUV( pos );
     float shX  = resolutionX/2.0f,
           shY  = resolutionY/3.0f;
     //head
-    Point2D headC = Point2D( (0.0f+shX), (4.5f+shY) );
+    Point2Df headC = Point2Df( (0.0f+shX), (4.5f+shY) );
     float head    = ellipsoid2D( pos, headC, 6.0f, 5.5f );
 
     //nose
-    Point2D noseC = Point2D( 0.0f+shX, 25.5f+shY );
+    Point2Df noseC = Point2Df( 0.0f+shX, 25.5f+shY );
     float nose    = ellipsoid2D( pos, noseC, 0.5f, 0.5f );
 
     //face
-    Point2D faceC1 = Point2D( 0.0f+shX, 4.5f+shY );
+    Point2Df faceC1 = Point2Df( 0.0f+shX, 4.5f+shY );
     float xFace1   = ellipsoid2D( pos, faceC1, 6.0f, 5.5f );
-    Point2D faceC2 = Point2D( 0.0f+shX, 3.7f+shY );
+    Point2Df faceC2 = Point2Df( 0.0f+shX, 3.7f+shY );
     float xFace2   = ellipticCylZ2D( pos, faceC2, 4.7f, 4.5f );
     float face     = intersect_function( xFace1, xFace2, 0.0f, 0.0f );
 
     //mouth
-    Point2D mouthC = Point2D( 0.0f+shX, 10.5f+shY );
+    Point2Df mouthC = Point2Df( 0.0f+shX, 10.5f+shY );
     float mouth1   = ellipsoid2D( pos, mouthC, 3.0f, 2.3f );
     float mouth2   = -(60.5f+shY)/resolutionY + uv.dy;
     float mouth    = intersect_function( mouth1, mouth2, 0.0f, 0.0f );
 
     //eyes
-    Point2D eye1C = Point2D( 0.0f+shX, 2.5f+shY );
+    Point2Df eye1C = Point2Df( 0.0f+shX, 2.5f+shY );
     float eye1    = ellipsoid2D( pos, eye1C, 6.0f, 5.5f );
 
-    Point2D eye2C = Point2D( 36.5f+shX, -10.5f+shY );
+    Point2Df eye2C = Point2Df( 36.5f+shX, -10.5f+shY );
     float eye2    = ellipticCylZ2D( pos, eye2C, 1.5f, 1.4f );
     float eye3    = intersect_function( eye1, eye2, 0.0f, 0.0f );
 
-    Point2D eye4C = Point2D( -36.5f+shX, -10.5f+shY );
+    Point2Df eye4C = Point2Df( -36.5f+shX, -10.5f+shY );
     float eye4    = ellipticCylZ2D( pos, eye4C, 1.5f, 1.4f );
     float eye5    = intersect_function( eye1, eye4, 0.0f, 0.0f);
 
-    Point2D eye6C = Point2D( 20.3f+shX, -10.5f+shY );
+    Point2Df eye6C = Point2Df( 20.3f+shX, -10.5f+shY );
     float eye6    = ellipsoid2D( pos, eye6C, 0.3f, 0.3f );
     float eye7    = subtract_function( eye3, eye6, 0.0f, 0.0f );
 
-    Point2D eye8C = Point2D( -20.3f+shX, -10.5f+shY );
+    Point2Df eye8C = Point2Df( -20.3f+shX, -10.5f+shY );
     float eye8    = ellipsoid2D( pos, eye8C, 0.3f, 0.3f );
     float eye9    = subtract_function( eye5, eye8, 0.0f, 0.0f );
 
@@ -221,33 +221,33 @@ float FRepObj2D::elf( Point2D pos )
     float fin_head  = subtract_function( fin_head3, fin_head0, 0.0f, 0.0f );
 
     //body
-    Point2D bodyC = Point2D( 0.0f+shX, 122.0f+shY );
+    Point2Df bodyC = Point2Df( 0.0f+shX, 122.0f+shY );
     float body1   = ellipsoid2D( pos, bodyC, 4.5f, 6.0f );
     float body2   = intersect_function( intersect_function( body1, (126.0f+shY)/resolutionY+uv.dy, 0.0f, 0.0f ),
                                                                   -(121.0f+shY)/resolutionY+uv.dy, 0.0f, 0.0f );
 
     //neck
-    Point2D neckC = Point2D( 0.0f+shX, 120.0f+shY );
+    Point2Df neckC = Point2Df( 0.0f+shX, 120.0f+shY );
     float neck    = ellipsoid2D( pos, neckC, 1.8f, 0.8f );
 
     //bell
-    Point2D bellC = Point2D( 0.0f+shX, 180.0f+shY );
+    Point2Df bellC = Point2Df( 0.0f+shX, 180.0f+shY );
     float bell    = circle( pos, bellC, 10.8f);
 
     float body3 = union_function( body2, neck, 0.0f, 0.0f );
 
     //belly
-    Point2D bellyC1 = Point2D( 0.0f+shX, 32.0f+shY );
+    Point2Df bellyC1 = Point2Df( 0.0f+shX, 32.0f+shY );
     float belly1    = ellipsoid2D( pos, bellyC1, 4.5, 6.0 );
 
-    Point2D bellyC2 = Point2D( 0.0f+shX, 200.0f+shY );
+    Point2Df bellyC2 = Point2Df( 0.0f+shX, 200.0f+shY );
     float belly2    = ellipticCylZ2D( pos, bellyC2, 0.5f, 0.5f );
     float belly3    = intersect_function( belly1, belly2, 0.0f, 0.0f );
 
-    Point2D bellyC4 = Point2D( 0.0f+shX, 138.0f+shY );
+    Point2Df bellyC4 = Point2Df( 0.0f+shX, 138.0f+shY );
     float belly4    = ellipticCylZ2D( pos, bellyC4, 2.0f, 1.6f );
 
-    Point2D bellyC5 = Point2D( 0.0f+shX, 200.0f+shY );
+    Point2Df bellyC5 = Point2Df( 0.0f+shX, 200.0f+shY );
     float belly5    = ellipsoid2D( pos, bellyC5, 1.1f, 1.1f );
     float belly6    = -(103.0f+shY)/resolutionY + uv.dy;
 
@@ -258,14 +258,14 @@ float FRepObj2D::elf( Point2D pos )
     float fin_body  = union_function( fin_body3, bell, 0.0f, 0.0f );
 
     //legs and feet
-    Point2D l_legC = Point2D( 93.0f+shX, 247.5f+shY );
+    Point2Df l_legC = Point2Df( 93.0f+shX, 247.5f+shY );
     float l_leg    = ellipsoid2D( pos, l_legC, 3.0f, 1.5f );
-    Point2D r_legC = Point2D( -93.0f+shX, 247.5f+shY );
+    Point2Df r_legC = Point2Df( -93.0f+shX, 247.5f+shY );
     float r_leg    = ellipsoid2D( pos, r_legC, 3.0, 1.5 );
 
-    Point2D l_footC = Point2D( 92.0f+shX, 246.0f+shY );
+    Point2Df l_footC = Point2Df( 92.0f+shX, 246.0f+shY );
     float l_foot    = ellipsoid2D( pos, l_footC, 1.0f, 1.0f );
-    Point2D r_footC = Point2D(-92.0f+shX, 246.0f+shY);
+    Point2Df r_footC = Point2Df(-92.0f+shX, 246.0f+shY);
     float r_foot    = ellipsoid2D( pos, r_footC, 1.0f, 1.0f );
 
     float legs0 = union_function( l_leg, l_foot, 0.0f, 0.0f);
@@ -274,19 +274,19 @@ float FRepObj2D::elf( Point2D pos )
 
     //right mustache
     float rh = 0.15f;
-    Point2D r_mustC1 = Point2D( 112.0f+shX, 100.0f+shY );
+    Point2Df r_mustC1 = Point2Df( 112.0f+shX, 100.0f+shY );
     float r_must1    = torusZ2D( pos, r_mustC1, 7.0f, rh );
-    Point2D r_mustC2 = Point2D( 122.0f+shX, 102.0f+shY );
+    Point2Df r_mustC2 = Point2Df( 122.0f+shX, 102.0f+shY );
     float r_must2    = torusZ2D( pos, r_mustC2, 7.0f, rh );
-    Point2D r_mustC3 = Point2D( 112.0f+shX, 104.0f+shY );
+    Point2Df r_mustC3 = Point2Df( 112.0f+shX, 104.0f+shY );
     float r_must3    = torusZ2D( pos, r_mustC3, 7.0f, rh );
 
     //left mustache
-    Point2D l_mustC1 = Point2D( -112.0f+shX, 100.0f+shY );
+    Point2Df l_mustC1 = Point2Df( -112.0f+shX, 100.0f+shY );
     float l_must1    = torusZ2D( pos, l_mustC1, 7.0f, rh );
-    Point2D l_mustC2 = Point2D( -112.0f+shX, 102.0f+shY );
+    Point2Df l_mustC2 = Point2Df( -112.0f+shX, 102.0f+shY );
     float l_must2    = torusZ2D( pos, l_mustC2, 7.0f, rh );
-    Point2D l_mustC3 = Point2D( -112.0f+shX, 104.0f+shY );
+    Point2Df l_mustC3 = Point2Df( -112.0f+shX, 104.0f+shY );
     float l_must3    = torusZ2D( pos, l_mustC3, 7.0f, rh );
 
     float r_must11 = intersect_function( uv.dy, (1.4f*shY)/resolutionY - uv.dy, 0.0f, 0.0f );
@@ -299,14 +299,14 @@ float FRepObj2D::elf( Point2D pos )
     float mustache = union_function( r_mustF, l_mustF, 0.0f, 0.0f );
 
     //hands
-    Point2D r_handC = Point2D( 158.0f+shX, 152.5f+shY );
+    Point2Df r_handC = Point2Df( 158.0f+shX, 152.5f+shY );
     float r_hand    = circle( pos, r_handC, 30.0f );
-    Point2D l_handC = Point2D( -158.0f+shX, 152.5f+shY );
+    Point2Df l_handC = Point2Df( -158.0f+shX, 152.5f+shY );
     float l_hand    = circle( pos, l_handC, 30.0f );
 
     float ude2   = uv.dy + (150.0f+shY)/resolutionY;
     float ude3   = (150.0f+shY)/resolutionY - uv.dy;
-    Point2D udeC = Point2D( 0.0f+shX, 251.0f+shY );
+    Point2Df udeC = Point2Df( 0.0f+shX, 251.0f+shY );
     float ude1   = torusZ2D( pos, udeC, 30.0f, 0.3f );
     float te1    = intersect_function( intersect_function( ude1, ude2, 0.0f, 0.0f ), ude3, 0.0f, 0.0f );
     float te2    = union_function( union_function( te1, r_hand, 0.0f, 0.0f ), l_hand, 0.0f, 0.0f );
@@ -320,24 +320,24 @@ float FRepObj2D::elf( Point2D pos )
     return elf;
 }
 
-float FRepObj2D::bat(Point2D pos)
+float FRepObj2D::bat(Point2Df pos)
 {
-    float rec0 = rectangle( pos, Point2D(250, 250), 50, 30 ); //main body
-    float rec1 = rectangle( pos, Point2D(330, 245), 40, 35 );
-    float rec2 = rectangle( pos, Point2D(170, 245), 40, 35 );
-    float rec3 = rectangle( pos, Point2D(335, 204), 35, 9 );
-    float rec4 = rectangle( pos, Point2D(165, 204), 35, 9 );
-    float rec5 = rectangle( pos, Point2D(250, 215), 12, 6 );  //head
+    float rec0 = rectangle( pos, Point2Df(250, 250), 50, 30 ); //main body
+    float rec1 = rectangle( pos, Point2Df(330, 245), 40, 35 );
+    float rec2 = rectangle( pos, Point2Df(170, 245), 40, 35 );
+    float rec3 = rectangle( pos, Point2Df(335, 204), 35, 9 );
+    float rec4 = rectangle( pos, Point2Df(165, 204), 35, 9 );
+    float rec5 = rectangle( pos, Point2Df(250, 215), 12, 6 );  //head
 
-    float tri0 = triangle2( getRotatedCoords(pos, 45), getRotatedCoords(Point2D(250, 270),45), 40, 40 );
-    float tri1 = triangle2( pos, Point2D(216, 216), 7, 7 );
-    float tri2 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2D(284, 216),90), 7, 7 );
-    float tri3 = triangle2( pos, Point2D(204, 203), 5, 8 );
-    float tri4 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2D(296, 203),90), 8, 5 );
-    float tri5 = triangle2( pos, Point2D(258.5, 200), 4, 10 );
-    float tri6 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2D(241, 200),90), 10, 4 );
-    float tri7 = triangle2( getRotatedCoords(pos, 180), getRotatedCoords(Point2D(98, 230),180), 40, 35 );
-    float tri8 = triangle2( getRotatedCoords(pos, 270), getRotatedCoords(Point2D(400, 230),270), 35, 40 );
+    float tri0 = triangle2( getRotatedCoords(pos, 45), getRotatedCoords(Point2Df(250, 270),45), 40, 40 );
+    float tri1 = triangle2( pos, Point2Df(216, 216), 7, 7 );
+    float tri2 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(284, 216),90), 7, 7 );
+    float tri3 = triangle2( pos, Point2Df(204, 203), 5, 8 );
+    float tri4 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(296, 203),90), 8, 5 );
+    float tri5 = triangle2( pos, Point2Df(258.5, 200), 4, 10 );
+    float tri6 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(241, 200),90), 10, 4 );
+    float tri7 = triangle2( getRotatedCoords(pos, 180), getRotatedCoords(Point2Df(98, 230),180), 40, 35 );
+    float tri8 = triangle2( getRotatedCoords(pos, 270), getRotatedCoords(Point2Df(400, 230),270), 35, 40 );
 
     float union1  = union_function( rec0, rec1, 0, 0 );
     float union2  = union_function( rec2, union1, 0, 0 );
@@ -357,15 +357,15 @@ float FRepObj2D::bat(Point2D pos)
     return bat;
 }
 
-float FRepObj2D::trebleClef(Point2D pos)
+float FRepObj2D::trebleClef(Point2Df pos)
 {
     //constructing bottom part
-    float rec_base = rectangle( pos, Point2D(250, 230), 15, 120 );
-    float ark1     = circle( pos, Point2D(230, 345), 35 );
-    float ark2     = circle( pos, Point2D(200, 325), 40 );
-    float ark3     = circle( pos, Point2D(220, 345), 35 );
-    float ark4     = circle( pos, Point2D(230, 320), 35 );
-    float circ_bot = circle( pos, Point2D(210, 335), 20 );
+    float rec_base = rectangle( pos, Point2Df(250, 230), 15, 120 );
+    float ark1     = circle( pos, Point2Df(230, 345), 35 );
+    float ark2     = circle( pos, Point2Df(200, 325), 40 );
+    float ark3     = circle( pos, Point2Df(220, 345), 35 );
+    float ark4     = circle( pos, Point2Df(230, 320), 35 );
+    float circ_bot = circle( pos, Point2Df(210, 335), 20 );
 
     float arkB1 = subtract_function( ark1, ark2, 0.0f, 0.0f );
     float arkB2 = subtract_function( ark3, ark4, 0.0f, 0.0f );
@@ -375,10 +375,10 @@ float FRepObj2D::trebleClef(Point2D pos)
     float fin_bot = union_function( circ_bot, union2, 0.0f, 0.0f );
 
     //constructing middle part
-    float ark5 = circle( pos, Point2D(262, 240), 60 );
-    float ark6 = circle( pos, Point2D(245, 245), 49 );
-    float ark7 = circle( pos, Point2D(250, 222), 80 );
-    float ark8 = circle( pos, Point2D(265, 222), 70 );
+    float ark5 = circle( pos, Point2Df(262, 240), 60 );
+    float ark6 = circle( pos, Point2Df(245, 245), 49 );
+    float ark7 = circle( pos, Point2Df(250, 222), 80 );
+    float ark8 = circle( pos, Point2Df(265, 222), 70 );
 
     float arkM1 = subtract_function( ark5, ark6, 0.0f, 0.0f );
     float arkM2 = subtract_function( ark7, ark8, 0.0f, 0.0f );
@@ -387,12 +387,12 @@ float FRepObj2D::trebleClef(Point2D pos)
     float fin_middle = union_function( arkM2, union3, 0.0f, 0.0f );
 
     //constructing upper part
-    float ark9  = circle( pos, Point2D(250, 95), 57 );
-    float ark10 = circle( pos, Point2D(220, 81), 65 );
-    float ark11 = circle( pos, Point2D(294, 100), 60 );
-    float ark12 = circle( pos, Point2D(337, 90), 75 );
-    float rec_helper1 = rectangle( pos, Point2D(250, 163), 100, 50 );
-    float circ_top    = circle( pos, Point2D(277, 49), 5 );
+    float ark9  = circle( pos, Point2Df(250, 95), 57 );
+    float ark10 = circle( pos, Point2Df(220, 81), 65 );
+    float ark11 = circle( pos, Point2Df(294, 100), 60 );
+    float ark12 = circle( pos, Point2Df(337, 90), 75 );
+    float rec_helper1 = rectangle( pos, Point2Df(250, 163), 100, 50 );
+    float circ_top    = circle( pos, Point2Df(277, 49), 5 );
 
     float arkU1  = subtract_function( ark9, ark10, 0.0f, 0.0f );
     float arkU2  = subtract_function( ark11, ark12, 0.0f, 0.0f );
@@ -435,7 +435,7 @@ float FRepObj2D::bounded_blending(float f1, float f2, float a0, float a1, float 
       return union_function(f1, f2, alpha, m) + d;
 }
 
-float FRepObj2D::intersect_function_R0(float f1, float f2, Point2D gradf1, Point2D gradf2, float n)
+float FRepObj2D::intersect_function_R0(float f1, float f2, Point2Df gradf1, Point2Df gradf2, float n)
 {
     float result = 0.0f;
 
@@ -486,7 +486,7 @@ float FRepObj2D::union_function_R0(float f1, float f2, float n)
     return result;
 }
 
-float FRepObj2D::union_function_R0(float f1, float f2, Point2D gradf1, Point2D gradf2, float n)
+float FRepObj2D::union_function_R0(float f1, float f2, Point2Df gradf1, Point2Df gradf2, float n)
 {
     float result = 0.0f;
 
@@ -526,69 +526,69 @@ float FRepObj2D::union_function_R0(float f1, float f2, Point2D gradf1, Point2D g
     return result;
 }
 
-std::vector<float> FRepObj2D::getFRep2D(std::function<float(Point2D)> fun)
+std::vector<float> FRepObj2D::getFRep2D(std::function<float(Point2Df)> fun)
 {
     frep.clear();
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( Point2D( x, y )) );
+            frep.push_back( fun( Point2Df( x, y )) );
         }
     }
     return frep;
 }
 
-std::vector<float> FRepObj2D::getFRep2D(Point2D cent, std::function<float( Point2D, Point2D )> fun)
+std::vector<float> FRepObj2D::getFRep2D(Point2Df cent, std::function<float( Point2Df, Point2Df )> fun)
 {
     frep.clear();
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( Point2D( x, y ), cent ));
+            frep.push_back( fun( Point2Df( x, y ), cent ));
         }
     }
     return frep;
 }
 
-std::vector<float> FRepObj2D::getFRep2D(Point2D cent, float R,
-                                        std::function<float(Point2D, Point2D, float)> fun )
+std::vector<float> FRepObj2D::getFRep2D(Point2Df cent, float R,
+                                        std::function<float(Point2Df, Point2Df, float)> fun )
 {
     frep.clear();
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( Point2D( x, y ), cent, R ));
+            frep.push_back( fun( Point2Df( x, y ), cent, R ));
         }
     }
     return frep;
 }
 
-std::vector<float> FRepObj2D::getFRep2D(Point2D cent, float p1, float p2,
-                                        std::function<float(Point2D, Point2D, float, float )> fun )
+std::vector<float> FRepObj2D::getFRep2D(Point2Df cent, float p1, float p2,
+                                        std::function<float(Point2Df, Point2Df, float, float )> fun )
 {
     frep.clear();
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( Point2D( x, y ), cent, p1, p2 ));
+            frep.push_back( fun( Point2Df( x, y ), cent, p1, p2 ));
         }
     }
     return frep;
 }
 
-std::vector<float> FRepObj2D::getFRep2D(Point2D cent, float p1, float p2, float p3,
-                                        std::function<float(Point2D, Point2D, float, float, float)> fun)
+std::vector<float> FRepObj2D::getFRep2D(Point2Df cent, float p1, float p2, float p3,
+                                        std::function<float(Point2Df, Point2Df, float, float, float)> fun)
 {
     frep.clear();
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( Point2D( x, y ), cent, p1, p2, p3 ));
+            frep.push_back( fun( Point2Df( x, y ), cent, p1, p2, p3 ));
         }
     }
     return frep;
@@ -617,42 +617,42 @@ std::vector<float> FRepObj2D::getFRep2D(std::vector<float> f1, std::vector<float
     return frep;
 }
 
-Point2D FRepObj2D::getRotatedCoords(Point2D inCoords, const float angle )
+Point2Df FRepObj2D::getRotatedCoords(Point2Df inCoords, const float angle )
 {
     float angle0 = static_cast<float>( (angle/180.0f) * M_PI );
 
     float rotX = inCoords.dx*cosf( angle0 ) - inCoords.dy*sinf( angle0);
     float rotY = inCoords.dx*sinf( angle0 ) + inCoords.dy*cosf( angle0 );
-    return Point2D( rotX, rotY );
+    return Point2Df( rotX, rotY );
 }
 
-std::vector<float> FRepObj2D::getRotatedFrep2D( Point2D cent, float w, float h,
-                                                float angle, std::function<float (Point2D, Point2D, float, float)> fun)
+std::vector<float> FRepObj2D::getRotatedFrep2D( Point2Df cent, float w, float h,
+                                                float angle, std::function<float (Point2Df, Point2Df, float, float)> fun)
 {
     frep.clear();
-    Point2D c0 = getRotatedCoords( cent, angle );
+    Point2Df c0 = getRotatedCoords( cent, angle );
 
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( getRotatedCoords( Point2D(x,y), angle ), c0, w, h ));
+            frep.push_back( fun( getRotatedCoords( Point2Df(x,y), angle ), c0, w, h ));
         }
     }
     return frep;
 }
 
-std::vector<float> FRepObj2D::getRotatedFrep2D( Point2D cent, float a, float b, float c, float angle,
-                                                std::function<float (Point2D, Point2D, float, float, float, float)> fun )
+std::vector<float> FRepObj2D::getRotatedFrep2D( Point2Df cent, float a, float b, float c, float angle,
+                                                std::function<float (Point2Df, Point2Df, float, float, float, float)> fun )
 {
     frep.clear();
-    Point2D c0 = getRotatedCoords( cent, angle );
+    Point2Df c0 = getRotatedCoords( cent, angle );
 
     for( int y = 0; y < resolutionY; y++ )
     {
         for( int x = 0; x < resolutionX; x++ )
         {
-            frep.push_back( fun( getRotatedCoords( Point2D(x, y), angle ), c0, a, b, c, angle ));
+            frep.push_back( fun( getRotatedCoords( Point2Df(x, y), angle ), c0, a, b, c, angle ));
         }
     }
     return frep;

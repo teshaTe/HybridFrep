@@ -11,7 +11,7 @@ microstruct::microstruct(int res_x, int res_y)
     frep = std::make_shared<FRepObj2D>( res_x, res_y, 1.0f );
 }
 
-std::vector<float> microstruct::sinusoidalFunc(unitCellType uType, Point2D q, Point2D p, Point2D l, float d_offset)
+std::vector<float> microstruct::sinusoidalFunc(unitCellType uType, Point2Df q, Point2Df p, Point2Df l, float d_offset)
 {
     std::vector<float> result;
     clamp( &l );
@@ -30,7 +30,7 @@ std::vector<float> microstruct::sinusoidalFunc(unitCellType uType, Point2D q, Po
             if( uType == RODE_CELL )
                 res  = -frep->intersect_function( sX, sY, 0.0f, 0.0f ) + d_offset;
             else if( uType == TORUS_CELL )
-                res = frep->torusY2D( Point2D(sX, sY), Point2D(0.0f, 0.0f), 1.0f, 0.8f );
+                res = frep->torusY2D( Point2Df(sX, sY), Point2Df(0.0f, 0.0f), 1.0f, 0.8f );
 
             result.push_back( res );
         }
@@ -55,7 +55,7 @@ std::vector<float> microstruct::calcObjWithMStruct(std::vector<float> *frepObj, 
     return result;
 }
 
-void microstruct::clamp(Point2D *val)
+void microstruct::clamp(Point2Df *val)
 {
     if( val->dx > 1.0f )  val->dx = 1.0f;
     if( val->dy > 1.0f )  val->dy = 1.0f;
