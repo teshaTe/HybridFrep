@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 {
     hfrep2D::FRepObj2D frep( 512, 512, 4.0f );
     auto fun = std::bind(&hfrep2D::FRepObj2D::heart2D, frep, std::placeholders::_1, std::placeholders::_2);
-    std::vector<float> heart = frep.getFRep2D( hfrep2D::Point2D( 250.0f, 150.0f ), fun );
+    std::vector<float> heart = frep.getFRep2D( hfrep2D::Point2Df( 250.0f, 150.0f ), fun );
 
     cv::Mat heart_pic = cv::Mat(512, 512, CV_8UC1);
     unsigned char* heart_buf = heart_pic.data;
@@ -36,46 +36,46 @@ int main(int argc, char** argv)
     cv::imwrite("heart.jpg", heart_pic);
 
     auto fun1 = std::bind(&hfrep2D::FRepObj2D::rectangle, frep, std::placeholders::_1, std::placeholders::_2,
-                                                               std::placeholders::_3, std::placeholders::_4);
-    std::vector<float> frep1H = frep.getFRep2D( hfrep2D::Point2D( 100.0f, 350.0f ),
+                                                                std::placeholders::_3, std::placeholders::_4);
+    std::vector<float> frep1H = frep.getFRep2D( hfrep2D::Point2Df( 100.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2H = frep.getFRep2D( hfrep2D::Point2D( 140.0f, 350.0f ),
+    std::vector<float> frep2H = frep.getFRep2D( hfrep2D::Point2Df( 140.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep3H = frep.getFRep2D( hfrep2D::Point2D( 125.0f, 350.0f ),
+    std::vector<float> frep3H = frep.getFRep2D( hfrep2D::Point2Df( 125.0f, 350.0f ),
                                                   20.0f, 10.0f, fun1 );
 
-    std::vector<float> frep1E = frep.getFRep2D( hfrep2D::Point2D( 170.0f, 350.0f ),
+    std::vector<float> frep1E = frep.getFRep2D( hfrep2D::Point2Df( 170.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2E = frep.getFRep2D( hfrep2D::Point2D( 195.0f, 320.0f ),
+    std::vector<float> frep2E = frep.getFRep2D( hfrep2D::Point2Df( 195.0f, 320.0f ),
                                                   20.0f, 10.0f, fun1 );
-    std::vector<float> frep3E = frep.getFRep2D( hfrep2D::Point2D( 195.0f, 350.0f ),
+    std::vector<float> frep3E = frep.getFRep2D( hfrep2D::Point2Df( 195.0f, 350.0f ),
                                                   20.0f, 10.0f, fun1 );
-    std::vector<float> frep4E = frep.getFRep2D( hfrep2D::Point2D( 195.0f, 380.0f ),
+    std::vector<float> frep4E = frep.getFRep2D( hfrep2D::Point2Df( 195.0f, 380.0f ),
                                                   20.0f, 10.0f, fun1 );
 
-    std::vector<float> frep1A = frep.getFRep2D( hfrep2D::Point2D( 235.0f, 350.0f ),
+    std::vector<float> frep1A = frep.getFRep2D( hfrep2D::Point2Df( 235.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2A = frep.getFRep2D( hfrep2D::Point2D( 260.0f, 320.0f ),
+    std::vector<float> frep2A = frep.getFRep2D( hfrep2D::Point2Df( 260.0f, 320.0f ),
                                                   30.0f, 10.0f, fun1 );
-    std::vector<float> frep3A = frep.getFRep2D( hfrep2D::Point2D( 285.0f, 350.0f ),
+    std::vector<float> frep3A = frep.getFRep2D( hfrep2D::Point2Df( 285.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep4A = frep.getFRep2D( hfrep2D::Point2D( 260.0f, 350.0f ),
+    std::vector<float> frep4A = frep.getFRep2D( hfrep2D::Point2Df( 260.0f, 350.0f ),
                                                   30.0f, 10.0f, fun1 );
 
-    std::vector<float> frep1R = frep.getFRep2D( hfrep2D::Point2D( 320.0f, 350.0f ),
+    std::vector<float> frep1R = frep.getFRep2D( hfrep2D::Point2Df( 320.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2R = frep.getFRep2D( hfrep2D::Point2D( 365.0f, 330.0f ),
+    std::vector<float> frep2R = frep.getFRep2D( hfrep2D::Point2Df( 365.0f, 330.0f ),
                                                   10.0f, 20.0f, fun1 );
-    std::vector<float> frep3R = frep.getFRep2D( hfrep2D::Point2D( 345.0f, 320.0f ),
+    std::vector<float> frep3R = frep.getFRep2D( hfrep2D::Point2Df( 345.0f, 320.0f ),
                                                   30.0f, 10.0f, fun1 );
-    std::vector<float> frep4R = frep.getFRep2D( hfrep2D::Point2D( 345.0f, 350.0f ),
+    std::vector<float> frep4R = frep.getFRep2D( hfrep2D::Point2Df( 345.0f, 350.0f ),
                                                   30.0f, 10.0f, fun1 );
-    std::vector<float> frep5R = frep.getRotatedFrep2D(hfrep2D::Point2D( 510.0f, 10.0f ),
+    std::vector<float> frep5R = frep.getRotatedFrep2D(hfrep2D::Point2Df( 510.0f, 10.0f ),
                                                   25.0f, 10.0f, -45.0f*3.14f/180.0f, fun1 );
 
-    std::vector<float> frep1T = frep.getFRep2D( hfrep2D::Point2D( 415.0f, 350.0f ),
+    std::vector<float> frep1T = frep.getFRep2D( hfrep2D::Point2Df( 415.0f, 350.0f ),
                                                   10.0f, 40.0f, fun1 );
-    std::vector<float> frep2T = frep.getFRep2D( hfrep2D::Point2D( 415.0f, 320.0f ),
+    std::vector<float> frep2T = frep.getFRep2D( hfrep2D::Point2Df( 415.0f, 320.0f ),
                                                   30.0f, 10.0f, fun1 );
 
 
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
     }
 
     frep.setScalingFactor( 6.0f );
-    std::vector<float> decocube = frep.getFRep2D( hfrep2D::Point2D(250.0, 250.0f),
+    std::vector<float> decocube = frep.getFRep2D( hfrep2D::Point2Df(250.0, 250.0f),
                                                     std::bind(&hfrep2D::FRepObj2D::decocube2D,
                                                               frep, std::placeholders::_1, std::placeholders::_2 ));
     std::vector<float> decocubeHfrep = hfrepHeart.calculateHFRep2D( &decocube, nullptr, HYPERBOLIC_SIGMOID, 0.00001f, true );
@@ -194,6 +194,21 @@ int main(int argc, char** argv)
     render.drawRGB_isolines( &frepCube, 512, 512, 0.0001f, "frep" );
     render.drawRGB_isolines( &decocubeHfrep, 512, 512, 0.04f, "hfrep" );
     render.drawRGB_isolines( &decocubeSDDT, 512, 512, 0.04f, "sddt" );
+
+    auto unionF = std::bind(&hfrep2D::FRepObj2D::union_function, frep, std::placeholders::_1, std::placeholders::_2,
+                                                                       std::placeholders::_3, std::placeholders::_4);
+    std::vector<float> fr1H = frep.getFRep2D( hfrep2D::Point2Df( 150.0f, 250.0f ),
+                                                            60.0f, 160.0f, fun1 );
+    std::vector<float> fr2H = frep.getFRep2D( hfrep2D::Point2Df( 350.0f, 250.0f ),
+                                                            60.0f, 160.0f, fun1 );
+    std::vector<float> fr3H = frep.getFRep2D( hfrep2D::Point2Df( 250.0f, 290.0f ),
+                                                            60.0f, 50.0f, fun1 );
+
+    std::vector<float> H1 = frep.getFRep2D( fr1H, fr3H, 0.0, 0.0, unionF );
+    std::vector<float> H2 = frep.getFRep2D( H1, fr2H, 0.0, 0.0, unionF );
+
+    std::vector<float> scaledF = frep.scaleFunction( H2, 10.0 );
+    render.drawRGB_isolines( &scaledF, 512, 512, 0.005f, "H_frep" );
 
     return 0;
 }
