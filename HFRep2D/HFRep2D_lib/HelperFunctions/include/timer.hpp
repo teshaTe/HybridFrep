@@ -17,8 +17,8 @@ public:
     void End( std::string var )
     {
         auto end = std::chrono::high_resolution_clock::now();
-        auto time_span = std::chrono::duration_cast<std::chrono::microseconds>( end - start );
-        std::cout << var << ", iteration ["<< iter <<"] : " << time_span.count() << " [micSec];" << std::endl;
+        auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>( end - start );
+        std::cout << var << ", iteration ["<< iter <<"] : " << time_span.count()/1000.0f << " [Sec];" << std::endl;
 
         if(iter > 1)
             printf("\x1b[A");
