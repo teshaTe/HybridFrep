@@ -1,7 +1,7 @@
 #ifndef DRAW_FIELD
 #define DRAW_FIELD
 
-#include "opencv2/core.hpp"
+#include <SFML/Graphics/RenderWindow.hpp>
 
 namespace hfrep2D {
 
@@ -11,19 +11,18 @@ public:
     render2D() { }
     ~render2D() { }
 
-    cv::Mat convert_field_to_image( std::vector<uchar> *uchar_field, const std::vector<float> *field,
-                                    int res_x, int res_y );
+    void displayImage(sf::Image img);
 
-    void drawField         ( std::vector<uchar> *uchar_field, const std::vector<float> *field,
-                             int res_x, int res_y, std::string file_name="" );
-    void drawGrey_isolines ( std::vector<uchar> *uchar_field, const std::vector<float> *field,
-                            int res_x, int res_y, std::string file_name="" );
-    void drawRGB_isolines  (const std::vector<float> *field, int res_x, int res_y, float thres, std::string file_name="", float thres_iso = 0.0195f);
-
-    inline cv::Mat getResultingImg() { return res; }
+    void convertFieldToImage(std::vector<unsigned char> *uField, const std::vector<float> *field,
+                                      int resX, int resY );
+    sf::Image drawIsolines(const std::vector<float> *field, int resX, int resY, float thres,
+                       std::string fileName="", float thresISO = 0.0195f );
 
 private:
-    cv::Mat res;
+    void saveImage(std::string fileName);
+    void createWindow(int resX, int resY, std::string title);
+
+    sf::RenderWindow *window;
 };
 
 } // namespace draw

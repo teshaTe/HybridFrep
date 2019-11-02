@@ -35,7 +35,7 @@ public:
      * @param error         -
      * @param convNodeThres -
      */
-    void solveEikonalEquationParallel_CPU();
+    void solveEikonalEquationParallel_CPU(float frep_zero_bot=-0.005f, float frep_zero_up=0.005f);
 
     /**
      * @brief solveEikonalEquationParallel_CPU_lockFree - this function implements modified lock-free version of FIM algorithm;
@@ -43,7 +43,7 @@ public:
      * @param error         -
      * @param convNodeThres -
      */
-    void solveEikonalEquationParallel_CPU_lockFree(const std::vector<float> inField, const float convNodeThres );
+    void solveEikonalEquationParallel_CPU_lockFree(float frep_zero_bot, float frep_zero_up);
 
     /**
      * @brief solveEikonalEquationParallel_GPU - this function implements Group-Ordered FIM algorithm
@@ -58,8 +58,10 @@ public:
 
 private:
     //basic functions for computing FIM
-    void initialiseGrid();
-    void updateSolution();
+    void initialiseGrid(float frep_zero_bot, float frep_zero_up);
+    void updateSolution_parallelCPU();
+    void updateSolution_parallelCPU_lockFree();
+
     float godunovSolver(int ind, float speedFun , float h = 1.0f);
     Point2Df getGodunovABvals(int ind);
 
@@ -67,7 +69,6 @@ private:
 
     //compute the infinite value
     inline float calculateINF() { return std::max(resX, resY) + 1; }
-    inline bool isNodeConverged(float p, float q, float thres ) { return std::abs(p - q) <= thres; }
 
     bool isNodeInList( int ind )
     {
@@ -75,8 +76,10 @@ private:
        return it != aList1.end();
     }
 
-    inline void normField(){ std::transform(dField.begin(), dField.end(), dField.begin(),
-                                           std::bind2nd(std::multiplies<float>(), 10.0f/Inf)); }
+    inline void normField(){ std::transform( dField.begin(), dField.end(), dField.begin(),
+                                             std::bind2nd(std::multiplies<float>(), 10.0f/Inf)); }
+    inline void offsetField() { std::transform( dField.begin(), dField.end(), dField.begin(),
+                                                std::bind2nd(std::plus<float>(), 1e-36)); }
 
 private:
     int resX, resY;
@@ -86,7 +89,6 @@ private:
     std::vector<Point2Di> *srcPoints;
     std::vector<float> *srcField;
 
-    //activeList aList1;
     std::list<int> aList1;
     std::shared_ptr<timer> profile;
 };

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace interpolation {
+namespace hfrep2D {
 
 #define BICUBIC_INT  1
 #define TRICUBIC_INT 2
@@ -28,8 +28,8 @@ private:
     float interpolateBicubic(std::vector<float> *field, int curGridW, int curGridH, int x, int y);
     float interpolateTricubic(std::vector<float> *field , int x, int y, int z);
 
-    inline int index2d( int x, int y, int curW ) { return x + y*curW; }
-    inline int index3d( int x, int y, int z, int curW, int curH ) { return z*curW*curH + y*curW + x; }
+    inline size_t index2d( int x, int y, int curW ) { return x + y*curW; }
+    inline size_t index3d( int x, int y, int z, int curW, int curH ) { return z*curW*curH + y*curW + x; }
     inline int clipWithBounds( int n, int n_min, int n_max ) { return n > n_max ? n_max :( n < n_min ? n_min : n ); }
 
 };

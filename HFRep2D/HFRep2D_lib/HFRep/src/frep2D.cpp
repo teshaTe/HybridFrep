@@ -323,21 +323,21 @@ float FRepObj2D::elf( Point2Df pos )
 float FRepObj2D::bat(Point2Df pos)
 {
     float rec0 = rectangle( pos, Point2Df(250, 250), 50, 30 ); //main body
-    float rec1 = rectangle( pos, Point2Df(330, 245), 40, 35 );
-    float rec2 = rectangle( pos, Point2Df(170, 245), 40, 35 );
-    float rec3 = rectangle( pos, Point2Df(335, 204), 35, 9 );
-    float rec4 = rectangle( pos, Point2Df(165, 204), 35, 9 );
+    float rec1 = rectangle( pos, Point2Df(330, 244.5), 40, 36 );
+    float rec2 = rectangle( pos, Point2Df(170, 244.5), 40, 36 );
+    float rec3 = rectangle( pos, Point2Df(335, 205), 35, 9 ); //right part of the wing
+    float rec4 = rectangle( pos, Point2Df(165, 205), 35, 9 ); //left part of the wing
     float rec5 = rectangle( pos, Point2Df(250, 215), 12, 6 );  //head
 
-    float tri0 = triangle2( getRotatedCoords(pos, 45), getRotatedCoords(Point2Df(250, 270),45), 40, 40 );
-    float tri1 = triangle2( pos, Point2Df(216, 216), 7, 7 );
-    float tri2 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(284, 216),90), 7, 7 );
-    float tri3 = triangle2( pos, Point2Df(204, 203), 5, 8 );
-    float tri4 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(296, 203),90), 8, 5 );
-    float tri5 = triangle2( pos, Point2Df(258.5, 200), 4, 10 );
-    float tri6 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(241, 200),90), 10, 4 );
-    float tri7 = triangle2( getRotatedCoords(pos, 180), getRotatedCoords(Point2Df(98, 230),180), 40, 35 );
-    float tri8 = triangle2( getRotatedCoords(pos, 270), getRotatedCoords(Point2Df(400, 230),270), 35, 40 );
+    float tri0 = triangle2( getRotatedCoords(pos, 45), getRotatedCoords(Point2Df(250, 270),45), 40, 40 ); //bat tale, bottom triangle
+    float tri1 = triangle2( pos, Point2Df(216, 217), 7, 7 );                                              //supportive triangle (bot) for left wing, internal
+    float tri2 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(284, 216),90), 7, 7 );   //supportive triangle (bot) for right wing, internal
+    float tri3 = triangle2( pos, Point2Df(206, 205), 7, 9 );                                            //supportive triangle (up) for left wing, internal
+    float tri4 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(294, 205),90), 9, 7 ); //supportive triangle (up) for right wing, internal
+    float tri5 = triangle2( pos, Point2Df(258, 200), 4, 10 );                                             //right ear
+    float tri6 = triangle2( getRotatedCoords(pos, 90), getRotatedCoords(Point2Df(242, 200),90), 10, 4 );  //left ear
+    float tri7 = triangle2( getRotatedCoords(pos, 180), getRotatedCoords(Point2Df(98, 230.5),180),  41, 35 ); //left wing
+    float tri8 = triangle2( getRotatedCoords(pos, 270), getRotatedCoords(Point2Df(400, 230.5),270), 35, 41 ); //right wing
 
     float union1  = union_function( rec0, rec1, 0, 0 );
     float union2  = union_function( rec2, union1, 0, 0 );

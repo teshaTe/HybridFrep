@@ -1,6 +1,3 @@
-#include "opencv2/highgui.hpp"
-#include "opencv2/core.hpp"
-
 #include "render2D.h"
 #include "frep2D.h"
 #include "hfrep2D.h"
@@ -66,7 +63,7 @@ int main(int argc, char** argv)
     std::vector<float> hfrep_circle1 = hfrep.calculateHFRep2D( &circle1, nullptr, HYPERBOLIC_SIGMOID, 0.00001f, true );
     std::vector<float> sddt_circle1  = hfrep.getSignedDDT();
 
-    //draw.drawRGB_isolines( &field, &hfrep_fin, 512, 512, 0.04f, "hfrep_combo", true );
+    //draw.drawIsolines( &field, &hfrep_fin, 512, 512, 0.04f, "hfrep_combo", true );
     auto fun2 = std::bind(&hfrep2D::FRepObj2D::rectangle, frep, std::placeholders::_1, std::placeholders::_2,
                                                                std::placeholders::_3, std::placeholders::_4);
     std::vector<float> rectangle = frep.getFRep2D( hfrep2D::Point2Df(250.0f, 230.0f), 110.0f, 50.0f, fun2 );
@@ -163,14 +160,14 @@ int main(int argc, char** argv)
     std::cout << "average error: "     << aver_error     / static_cast<float>(dist_diff.size())    << std::endl;
 
     hfrep2D::render2D draw;
-    draw.drawRGB_isolines( &sddt_union,     512, 512, 0.04f,  "sddt_max" );
-    draw.drawRGB_isolines( &sddt_union_alt, 512, 512, 0.001f, "sddt_alt_max" );
-    draw.drawRGB_isolines( &hfrep_union,    512, 512, 0.001f, "hfrep_union" );
+    draw.drawIsolines( &sddt_union,     512, 512, 0.04f,  "sddt_max" );
+    draw.drawIsolines( &sddt_union_alt, 512, 512, 0.001f, "sddt_alt_max" );
+    draw.drawIsolines( &hfrep_union,    512, 512, 0.001f, "hfrep_union" );
 
-    draw.drawRGB_isolines( &sddt_circle, 512, 512, 0.04f, "sddt_R0_max" );
-    draw.drawRGB_isolines( &true_dist0,  512, 512, 0.02f, "true_dist_max" );
-    draw.drawRGB_isolines( &true_dist1,  512, 512, 0.02f, "true_dist_R0" );
+    draw.drawIsolines( &sddt_circle, 512, 512, 0.04f, "sddt_R0_max" );
+    draw.drawIsolines( &true_dist0,  512, 512, 0.02f, "true_dist_max" );
+    draw.drawIsolines( &true_dist1,  512, 512, 0.02f, "true_dist_R0" );
 
-    draw.drawRGB_isolines( &frep_union_cir, 512, 512, 0.001f, "frep_union" );
+    draw.drawIsolines( &frep_union_cir, 512, 512, 0.001f, "frep_union" );
     return 0;
 }

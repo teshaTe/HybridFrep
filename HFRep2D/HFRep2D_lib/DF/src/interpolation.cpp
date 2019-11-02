@@ -1,7 +1,7 @@
 #include "interpolation.h"
 #include <iostream>
 
-namespace interpolation {
+namespace hfrep2D {
 
 interpolate::interpolate(int gridW, int gridH, int gridD)
 {
@@ -63,7 +63,6 @@ void interpolate::interpolateField(std::vector<float> *inField, int curGridW, in
                 finField[index2d(x, y, voxGrW)] = interpolateBicubic( inField, curGridW, curGridH, x, y );
             }
         }
-
     }
     else if( interType == TRICUBIC_INT )
     {
@@ -84,8 +83,8 @@ void interpolate::interpolateField(std::vector<float> *inField, int curGridW, in
 
 float interpolate::interpolateCubic( float point[4], float x )
 {
-    return point[1] + 0.5f* x*(point[2] - point[0] + x*(2.0f*point[0] - 5.0f*point[1] + 4.0f*point[2] -
-           point[3] + x*(3.0f*(point[1] - point[2]) + point[3] - point[0])));
+    return point[1] + 0.5f * x * (point[2] - point[0] + x *(2.0f*point[0] - 5.0f*point[1] + 4.0f*point[2] -
+           point[3] + x * (3.0f * (point[1] - point[2]) + point[3] - point[0])));
 }
 
 float interpolate::interpolateBicubic(std::vector<float> *field, int curGridW, int curGridH, int x, int y)

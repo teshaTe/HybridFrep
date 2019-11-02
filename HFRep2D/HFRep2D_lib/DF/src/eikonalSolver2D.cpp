@@ -19,21 +19,27 @@ FIMSolver::FIMSolver(int gridResX, int gridResY): resX(gridResX),
     spFun = 1.0f;
 }
 
-void FIMSolver::solveEikonalEquationParallel_CPU()
+void FIMSolver::solveEikonalEquationParallel_CPU(float frep_zero_bot, float frep_zero_up)
 {
-    initialiseGrid();
-    updateSolution();
+    initialiseGrid(frep_zero_bot, frep_zero_up);
+    updateSolution_parallelCPU();
 }
 
-void FIMSolver::initialiseGrid()
+void FIMSolver::solveEikonalEquationParallel_CPU_lockFree(float frep_zero_bot, float frep_zero_up)
+{
+    initialiseGrid(frep_zero_bot, frep_zero_up);
+    updateSolution_parallelCPU_lockFree();
+}
+
+void FIMSolver::initialiseGrid(float frep_zero_bot, float frep_zero_up)
 {
     if( srcField != nullptr && srcPoints == nullptr )
     {
         for( int i = 0; i < resX*resY; i++ )
         {
-            if( srcField->at(i) <= 0.00025f && srcField->at(i) >= -0.00025f )
+            if( srcField->at(i) <= frep_zero_up && srcField->at(i) >= frep_zero_bot )
             {
-                 dField[i] = 0; //defining source node in the grid, zero level-set
+                 dField[i] = 1e-36f; //defining source node in the grid, zero level-set
                  aList1.push_back(i);
             }
                 else
@@ -61,38 +67,45 @@ void FIMSolver::initialiseGrid()
     }
 }
 
-void FIMSolver::updateSolution( )
+void FIMSolver::updateSolution_parallelCPU()
 {
+    profile.get()->Start();
+
     while ( !aList1.empty() )
     {
-#ifdef ENABLE_OPENMP
-#pragma omp parallel shared() private()
-{
-#pragma omp for simd schedule(static,5)
-#endif
-        for( std::list<int>::iterator node = aList1.begin(); node!=aList1.end(); ++node )
-        {
-            profile.get()->Start();
+        float *distBuf = dField.data();
+        float p1, q1, p2, q2;
+        int i, j, k;
 
-            int i = *node;
-            float p1 = dField[i];
-            float q1 = godunovSolver(i, spFun);
+#ifdef ENABLE_OPENMP
+    #pragma omp parallel //shared(distBuf, spFun) private(i,j,k,p1,p2,q1,q2)
+    #pragma omp single
+{
+#endif
+        for( auto node = aList1.begin(); node!=aList1.end(); ++node )
+        {
+#ifdef ENABLE_OPENMP
+    #pragma omp task firstprivate(node)
+#endif
+            i  = *node;
+            p1 = distBuf[i];
+            q1 = godunovSolver(i, spFun);
 
             if(p1 > q1)
-                dField[i] = q1;
+                distBuf[i] = q1;
             else
             {
                 std::vector<int> neighbours = getNeighbours(i);
-                for( size_t j = 0; j < neighbours.size(); j++ )
+                for( j = 0; j < neighbours.size(); j++ )
                 {
-                    int k = neighbours[j];
-                    if( dField[k] > dField[i] && !isNodeInList(k))
+                    k = neighbours[j];
+                    if( distBuf[k] > distBuf[i] && !isNodeInList(k))
                     {
-                        float p2 = dField[k];
-                        float q2 = godunovSolver(k, spFun);
+                        p2 = distBuf[k];
+                        q2 = godunovSolver(k, spFun);
                         if( p2 > q2 )
                         {
-                            dField[k] = q2;
+                            distBuf[k] = q2;
                             aList1.insert(node, k);
                         }
                     }
@@ -100,10 +113,18 @@ void FIMSolver::updateSolution( )
                 node = aList1.erase(node);
                 --node;
             }
-            profile.get()->End("solver");
         }
-        profile.get()->resetIter();
-    }
+#ifdef ENABLE_OPENMP
+#pragma omp taskwait
+}
+#endif
+   }
+   profile.get()->End("solver");
+}
+
+void FIMSolver::updateSolution_parallelCPU_lockFree()
+{
+
 }
 
 float FIMSolver::godunovSolver(int ind, float speedFun, float h)

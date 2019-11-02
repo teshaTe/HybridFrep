@@ -1,6 +1,3 @@
-#include "opencv2/highgui.hpp"
-#include "opencv2/core.hpp"
-
 #include "render2D.h"
 #include "frep2D.h"
 #include "hfrep2D.h"
@@ -88,9 +85,9 @@ int main(int argc, char** argv)
     }
 
     hfrep2D::render2D draw;
-    draw.drawRGB_isolines( &union2, 512, 512, 0.05f, "hfrep_uR0" );
-    draw.drawRGB_isolines( &union_R, 512, 512, 0.001f, "frep_uR" );
-    draw.drawRGB_isolines( &union_max, 512, 512, 0.05f, "hfrep_max" );
+    draw.drawIsolines( &union2, 512, 512, 0.05f, "hfrep_uR0" );
+    draw.drawIsolines( &union_R, 512, 512, 0.001f, "frep_uR" );
+    draw.drawIsolines( &union_max, 512, 512, 0.05f, "hfrep_max" );
 
     frep.setScalingFactor( 3.0f );
     std::vector<float> heartFrep = frep.getFRep2D( hfrep2D::Point2Df(250.0f, 250.0f),
@@ -98,7 +95,7 @@ int main(int argc, char** argv)
     std::vector<float> heartHFRep = hfrep.calculateHFRep2D( &heartFrep, nullptr, HYPERBOLIC_SIGMOID, 0.000001f, false );
     std::vector<float> sddt = hfrep.getDDT();
 
-    draw.drawRGB_isolines( &sddt, 512, 512, 0.04f, "ddt4");
+    draw.drawIsolines( &sddt, 512, 512, 0.04f, "ddt4");
 
     return 0;
 }

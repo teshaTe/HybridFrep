@@ -15,7 +15,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -O3")
 
 find_package( SFML REQUIRED COMPONENTS graphics window system )
 find_package( Threads REQUIRED)
-find_package( OpenCV  REQUIRED)
 find_package( Boost REQUIRED )
 find_package( GLEW    REQUIRED)
 find_package( glfw3   REQUIRED)
