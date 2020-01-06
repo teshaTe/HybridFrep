@@ -17,7 +17,6 @@ find_package( SFML REQUIRED COMPONENTS graphics window system )
 find_package( Threads REQUIRED)
 find_package( Boost REQUIRED )
 find_package( GLEW    REQUIRED)
-find_package( glfw3   REQUIRED)
 find_package( OpenGL  REQUIRED)
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep2D/HFRep2D_lib/HelperFunctions/include")
@@ -25,7 +24,11 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep2D/HFRep2D_lib/DF/include"
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep2D/HFRep2D_lib/DataStructures/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep2D/HFRep2D_lib/HFRep/include")
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/UDF/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/HFRep/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/WindowCamera/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/OpenGL_api/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/HFRep3D/HFRep3D_lib/OpenGL_api/shaders")
 
 #################################_SET_OPTIONS_#################################
 option(USE_OPENMP     "Enable for CPU multithreading"                 OFF)
