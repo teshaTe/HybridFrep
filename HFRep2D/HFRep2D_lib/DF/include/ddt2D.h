@@ -7,10 +7,9 @@
 #ifndef DISTANCE_FIELD_H
 #define DISTANCE_FIELD_H
 
-#include "helperFunctions.hpp"
-
 #include <vector>
 #include <cmath>
+#include <glm/glm.hpp>
 
 namespace hfrep2D
 {
@@ -33,26 +32,27 @@ public:
 
     //functions for generating distance transform using binarized input image
 private:
-    inline float   calculate_inf() { return std::max(res_x, res_y) + 1; }
-    inline node2D get_grid_element(std::vector<node2D> &grid, int ind ) { return grid[ind]; }
-    inline void    fill_grid_element(std::vector<node2D> &grid, node2D point, int ind) { grid[ind] = point; }
+    inline float euclideanDistSq(glm::vec2 point) { return point.x*point.x + point.y*point.y; }
+    inline float  calculate_inf() { return std::max(res_x, res_y) + 1; }
+    inline glm::vec2 get_grid_element(std::vector<glm::vec2> &grid, int ind ) { return grid[ind]; }
+    inline void   fill_grid_element(std::vector<glm::vec2> &grid, glm::vec2 point, int ind) { grid[ind] = point; }
 
-    inline int index(int x, int y) { return x+y*static_cast<int>(res_x); }
+    inline int index(int x, int y) { return x+y*res_x; }
 
-    void generate_DF(std::vector<node2D> &grid);
+    void generate_DF(std::vector<glm::vec2> &grid);
     void create_grid( std::vector<float> *field );
-    void compare_grid_points(std::vector<node2D> &grid, node2D &point, int offsetx, int offsety, int x, int y);
+    void compare_grid_points(std::vector<glm::vec2> &grid, glm::vec2 &point, int offsetx, int offsety, int x, int y);
     void merge_grids(std::vector<float> &grid);
 
 private:
     int res_x, res_y, b_sh;
 
     float INF;
-    node2D INSIDE;
-    node2D EMPTY;
+    glm::vec2 INSIDE;
+    glm::vec2 EMPTY;
 
-    std::vector<node2D> grid_1;
-    std::vector<node2D> grid_2;
+    std::vector<glm::vec2> grid_1;
+    std::vector<glm::vec2> grid_2;
 
     std::vector<float> DDT;
     std::vector<float> SDDT;
