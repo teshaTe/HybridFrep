@@ -22,7 +22,7 @@ static void suriken(gdouble **f, GtsCartesianGrid g, guint k, gpointer data)
 {
     gdouble x, y, z = g.z;
     guint i, j;
-    frep::FRepObj2D frep0(g.nx, g.ny, 20);
+    hfrep2D::FRepObj2D frep0(g.nx, g.ny, 20);
 
    for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
       for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
@@ -33,7 +33,7 @@ static void bat(gdouble **f, GtsCartesianGrid g, guint k, gpointer data)
 {
     gdouble x, y, z = g.z;
     guint i, j;
-    frep::FRepObj2D frep0(g.nx, g.ny, 20);
+    hfrep2D::FRepObj2D frep0(g.nx, g.ny, 20);
 
    for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
       for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
@@ -44,28 +44,18 @@ static void circle(gdouble **f, GtsCartesianGrid g, guint k, gpointer data)
 {
     gdouble x, y, z = g.z;
     guint i, j;
-    frep::FRepObj2D frep0(g.nx, g.ny, 6.4);
+    hfrep2D::FRepObj2D frep0(g.nx, g.ny, 6.4);
 
    for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
       for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
         f[i][j] = -frep0.circle(glm::f32vec2(x, y), glm::f32vec2(0,0), 1);
 }
 
-static void c_shape(gdouble **f, GtsCartesianGrid g, guint k, gpointer data)
-{
-    gdouble x, y, z = g.z;
-    guint i, j;
-    frep::FRepObj2D frep0(g.nx, g.ny, 6.4);
-    for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
-       for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
-         f[i][j] = -frep0.c_shape(glm::f32vec2(x, y), glm::f32vec2(0,0));
-}
-
 static void heart2d(gdouble **f, GtsCartesianGrid g, guint k, gpointer data)
 {
     gdouble x, y, z = g.z;
     guint i, j;
-    frep::FRepObj2D frep0(g.nx, g.ny, 6.4);
+    hfrep2D::FRepObj2D frep0(g.nx, g.ny, 6.4);
 
    for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
       for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
@@ -76,7 +66,7 @@ static void heart3d(gdouble **f, GtsCartesianGrid g, guint k, gpointer data)
 {
     gdouble x, y, z = g.z;
     guint i, j;
-    frep::FRepObj3D frep(g.nx, g.ny, g.nz, 70);
+    hfrep3D::FRepObj3D frep(g.nx, g.ny, g.nz, 70);
 
    for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
       for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
@@ -87,7 +77,7 @@ static void sphere(gdouble ** f, GtsCartesianGrid g, guint k, gpointer data)
 {
     gdouble x, y, z = g.z;
     guint i, j;
-    frep::FRepObj3D frep(g.nx, g.ny, g.nz, 70);
+    hfrep3D::FRepObj3D frep(g.nx, g.ny, g.nz, 70);
 
     for (i = 0, x = g.x; i < g.nx; i++, x += g.dx)
         for (j = 0, y = g.y; j < g.ny; j++, y += g.dy)
